@@ -1,0 +1,48 @@
+{
+  "name": "assit_me_app",
+  "productName": "assit_me_app",
+  "version": "1.0.0",
+  "description": "My Electron application description",
+  "main": "src/minimal-working.js",
+  "scripts": {
+    "start": "electron .",
+    "rebuild": "electron-rebuild -f -w better-sqlite3",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "keywords": [],
+  "author": "Yusef Vestle <yusef@example.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.63.1",
+    "@google/generative-ai": "^0.24.1",
+    "@tonejs/midi": "^2.0.28",
+    "better-sqlite3": "^12.4.1",
+    "chokidar": "^4.0.3",
+    "electron": "^38.1.2",
+    "electron-squirrel-startup": "^1.0.1",
+    "elevenlabs": "^1.59.0",
+    "midi-parser-js": "^4.0.4",
+    "music-metadata": "^11.9.0",
+    "openai": "^5.23.0",
+    "python-shell": "^5.0.0",
+    "screenshot-desktop": "^1.15.2",
+    "tesseract.js": "^6.0.1",
+    "tone": "^15.1.22",
+    "wavesurfer.js": "^7.10.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.9.0",
+    "@electron-forge/maker-deb": "^7.9.0",
+    "@electron-forge/maker-rpm": "^7.9.0",
+    "@electron-forge/maker-squirrel": "^7.9.0",
+    "@electron-forge/maker-zip": "^7.9.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
+    "@electron-forge/plugin-fuses": "^7.9.0",
+    "@electron/fuses": "^1.8.0",
+    "electron-rebuild": "^3.2.9"
+  }
+}

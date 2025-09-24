@@ -1,0 +1,10 @@
+magenta
+note-seq
+tensorflow
+librosa
+numpy
+torch
+transformers
+accelerate
+sentencepiece
+protobuf

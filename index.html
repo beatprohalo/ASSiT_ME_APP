@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Music Creator & Organizer</title>
+    <script src="../node_modules/wavesurfer.js/dist/wavesurfer.min.js"></script>
+    <script src="../node_modules/tone/build/Tone.js"></script>
+    <script src="../node_modules/@tonejs/midi/build/Midi.js"></script>
+    <link rel="stylesheet" href="./neon.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #1e1e1e;
+      color: #f5f5f5;
+      display: flex;
+      height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background-color: #111;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .sidebar h2 {
+      margin-top: 0;
+      color: #0dbaff;
+    }
+
+    .sidebar button {
+      margin: 10px 0;
+      padding: 10px;
+      background: none;
+      border: 1px solid #444;
+      color: #fff;
+      text-align: left;
+      cursor: pointer;
+      border-radius: 6px;
+    }
+
+    .sidebar button:hover {
+      background-color: #0dbaff;
+      color: #000;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .section {
+      display: none;
+    }
+
+        .section.active {
+          display: block;
+        }
+
+        /* Chat Interface */
+        .chat-window {
+          height: 500px;
+          overflow-y: auto;
+          background: #222;
+          padding: 10px;
+          border-radius: 10px;
+          margin-bottom: 10px;
+        }
+
+        .message {
+          margin: 10px 0;
+          padding: 10px;
+          border-radius: 10px;
+          max-width: 70%;
+          word-wrap: break-word;
+        }
+
+        .user {
+          background: #0dbaff;
+          color: black;
+          margin-left: auto;
+          text-align: right;
+        }
+
+        .assistant {
+          background: #444;
+          color: white;
+          margin-right: auto;
+          text-align: left;
+        }
+
+        .chat-input {
+          display: flex;
+          gap: 10px;
+        }
+
+        .chat-input input {
+          flex: 1;
+          padding: 10px;
+          background: #333;
+          border: 1px solid #555;
+          color: white;
+          border-radius: 5px;
+        }
+
+        .chat-input button {
+          padding: 10px 20px;
+          background: #0dbaff;
+          color: black;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+        }
+
+        .chat-input button:hover {
+          background: #0aa8e6;
+        }
+
+        /* Settings Styling */
+        #settings {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        #settings h2 {
+          color: #0dbaff;
+          border-bottom: 2px solid #0dbaff;
+          padding-bottom: 5px;
+          margin-bottom: 15px;
+        }
+        #settings label {
+          display: block;
+          margin-bottom: 5px;
+          font-weight: bold;
+          color: #f5f5f5;
+        }
+        #settings input, #settings select {
+          padding: 8px;
+          border-radius: 6px;
+          border: 1px solid #444;
+          background: #222;
+          color: white;
+          margin-bottom: 15px;
+          width: 100%;
+          max-width: 300px;
+        }
+        #settings input:focus, #settings select:focus {
+          outline: none;
+          border-color: #0dbaff;
+          box-shadow: 0 0 5px rgba(13, 186, 255, 0.3);
+        }
+        #settings button {
+          padding: 12px 24px;
+          border-radius: 8px;
+          border: none;
+          background: #0dbaff;
+          color: black;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: bold;
+          margin-top: 20px;
+        }
+        #settings button:hover {
+          background: #0aa8e6;
+        }
+
+        /* Theme Styles */
+    body.dark-theme {
+      background: #111;
+      color: #eee;
+    }
+    body.light-theme {
+      background: #f8f8f8;
+      color: #111;
+    }
+    body.neon-theme {
+      background: linear-gradient(135deg, #0a0a0a 0%, #0d0d0d 50%, #0a0a0a 100%);
+      color: #ffffff;
+      font-family: 'Courier New', 'Monaco', monospace;
+      text-shadow: 0 0 5px #00ffff;
+    }
+
+        /* Sync Brief Styling */
+        #sync textarea {
+          width: 100%;
+          padding: 10px;
+          border-radius: 8px;
+          border: 1px solid #444;
+          background: #222;
+          color: white;
+          font-family: Arial, sans-serif;
+          resize: vertical;
+          margin-bottom: 10px;
+        }
+
+        #sync button {
+          padding: 10px 20px;
+          border-radius: 8px;
+          border: none;
+          background: #0dbaff;
+          color: black;
+          cursor: pointer;
+          font-size: 16px;
+        }
+
+        #sync button:hover {
+          background: #0aa8e6;
+        }
+
+        /* Dashboard Styling */
+        .dashboard-cards {
+          display: flex;
+          gap: 20px;
+          margin-bottom: 20px;
+        }
+        .card {
+          background: #222;
+          padding: 15px;
+          border-radius: 12px;
+          flex: 1;
+          text-align: center;
+          box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .card h2 {
+          margin: 0;
+          font-size: 1.2em;
+        }
+        .card p {
+          font-size: 2em;
+          margin: 10px 0 0;
+        }
+        .progress {
+          background: #333;
+          border-radius: 8px;
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+        .progress-bar {
+          height: 20px;
+          background: #0dbaff;
+          text-align: center;
+          font-size: 12px;
+          color: black;
+        }
+
+        .event {
+          background: #222;
+          margin: 8px 0;
+          padding: 10px;
+          border-radius: 10px;
+          box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>🎶 Menu</h2>
+        <button onclick="showSection('dashboard')">📊 Dashboard</button>
+        <button onclick="showSection('library')">📂 Library</button>
+        <button onclick="showSection('creative')">🎹 Creative</button>
+        <button onclick="showSection('assistant')">🤖 Assistant</button>
+        <button onclick="showSection('midi')">🎹 MIDI</button>
+        <button onclick="showSection('sync')">🎬 Sync Matching</button>
+        <button onclick="showSection('export')">📂 Export</button>
+        <button onclick="showSection('plugins')">🎛️ Plugins & Samples</button>
+        <button onclick="showSection('search')">🔍 Search</button>
+          <button onclick="showSection('timeline')">📅 Timeline</button>
+          <button onclick="showSection('player')">🎧 Player</button>
+          <button onclick="showSection('mixmatch')">🎚️ Mix Match</button>
+          <button onclick="showSection('autosort')">📂 Auto-Sorter</button>
+          <button onclick="showSection('backup')">💾 Backup</button>
+          <button onclick="showSection('tasks')">✅ Tasks</button>
+          <button onclick="showSection('notes')">📝 Notes</button>
+          <button onclick="showSection('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+        <div id="dashboard" class="section active">
+          <div class="stack">
+            <div class="header-title">
+              <span class="notes">🎶</span>
+              <span>Music Organizer</span>
+            </div>
+
+            <!-- Choose Scan Location -->
+            <div class="panel stack">
+              <h2>📍 Choose Scan Location</h2>
+              <div class="row" id="scanLocations">
+                <button class="pill" data-loc="user"><span class="icon">👤</span> User Folder</button>
+                <button class="pill" data-loc="alldrives"><span class="icon">💽</span> All Drives</button>
+                <button class="pill" data-loc="music"><span class="icon">🎵</span> Music Folder</button>
+                <button class="pill" data-loc="t7"><span class="icon">🔶</span> T7 Drive</button>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="deepScan" checked />
+                <span>Deep Scan (finds ALL files)</span>
+              </label>
+            </div>
+
+            <!-- Filter Results -->
+            <div class="panel stack">
+              <h2>🎛️ Filter Results</h2>
+              <div class="row" id="filters">
+                <button class="pill" data-filter="all">All Files</button>
+                <button class="pill" data-filter="audio">🎵 Audio Files</button>
+                <button class="pill active" data-filter="logic">Logic Pro</button>
+                <button class="pill" data-filter="protools">Pro Tools</button>
+                <button class="pill" data-filter="studioone">Studio One</button>
+                <button class="pill" data-filter="cubase">Cubase</button>
+                <button class="pill" data-filter="fl">FL Studio</button>
+                <button class="pill" data-filter="ableton">Ableton Live</button>
+              </div>
+
+              <div class="row">
+                <button class="btn btn-primary" id="btnScan">🔎 Scan for Music</button>
+                <button class="btn btn-danger" id="btnStop">🛑 Stop Scan</button>
+              </div>
+
+              <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+              <div class="status-strip" id="statusStrip">Showing 0 of 0 files</div>
+            </div>
+
+            <!-- Scan Results -->
+            <div class="stack" id="results">
+              <h2>📂 Scan Results</h2>
+
+              <!-- Example result item (cloned in JS) -->
+              <!--
+              <div class="result">
+                <div>
+                  <h4>Live_Recording.logic <span class="tag ok">DAW Project</span></h4>
+                  <div class="meta">Logic Pro Project · 12 tracks, 7 plugins · 30.2 MB</div>
+                  <div class="row" style="margin-top:8px;gap:8px;">
+                    <span class="tag kick">Kick</span>
+                    <span class="tag snare">Snare</span>
+                    <span class="tag hihat">Hi-Hat</span>
+                    <span class="tag loop">Loop</span>
+                    <span class="tag pad">Pad</span>
+                  </div>
+                </div>
+                <div class="row">
+                  <button class="btn-small primary" onclick="openProject('/path')">📂 Open Project</button>
+                  <button class="btn-small accent" onclick="openMetaModal(42)">🏷️ Add Tags</button>
+                </div>
+              </div>
+              -->
+            </div>
+          </div>
+        </div>
+    <div id="library" class="section">
+      <h1>📂 Library</h1>
+      <p>Your scanned music files will appear below:</p>
+        <table id="tracksTable" border="1" cellpadding="6" cellspacing="0">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Genre</th>
+              <th>Mood</th>
+              <th>BPM</th>
+              <th>Key</th>
+              <th>Notes</th>
+              <th>Play</th>
+              <th>Save</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Rows will be injected here -->
+          </tbody>
+        </table>
+    </div>
+        <div id="creative" class="section">
+          <h1>🎹 Creative Panel</h1>
+          <p>Generate chord progressions or upload your own MIDI files.</p>
+
+          <button onclick="generateIdea()">✨ Generate Idea</button>
+          <p id="ideaResult"></p>
+
+          <h2>🤖 AI Music Generation</h2>
+          <input type="text" id="mlPrompt" placeholder="e.g., dark trap melody, happy pop tune" />
+          <button onclick="generateMLMusic()">🎵 Generate with ML</button>
+          <p id="mlResult"></p>
+
+          <h2>🧠 Advanced ML Generation</h2>
+          <input type="text" id="advancedMLPrompt" placeholder="e.g., trap piano loop in C minor at 140 BPM" />
+          <button onclick="generateAdvancedML()">🎼 Advanced ML</button>
+          <p id="advancedMLResult"></p>
+
+          <h2>🎓 Train on Your Library</h2>
+          <input type="file" id="midiLibrary" accept=".mid,.midi" multiple onchange="analyzeLibrary(event)" />
+          <button onclick="generatePersonalized()">🎯 Generate Personalized</button>
+          <p id="trainingResult"></p>
+
+          <h2>🎼 Upload MIDI</h2>
+          <input type="file" id="midiUpload" accept=".mid,.midi" onchange="uploadMIDI(event)" />
+          <button onclick="saveMIDIPatterns()" id="savePatternsBtn" style="display:none;">💾 Save Patterns</button>
+          <p id="midiResult"></p>
+
+          <h2>🎧 Analyze Audio Files</h2>
+          <input type="file" id="audioUpload" accept=".wav,.mp3,.aiff" multiple onchange="uploadAudio(event)" />
+          <p id="audioResult"></p>
+        </div>
+        <div id="assistant" class="section stack">
+          <h1>💬 Assistant</h1>
+
+          <div class="panel stack" style="height: 60vh; overflow-y: auto;" id="chatWindow">
+            <!-- Chat bubbles will be appended here -->
+          </div>
+
+          <div class="row" style="margin-top:12px;">
+            <input type="text" id="chatInput" class="input" placeholder="Type your question..." />
+            <button class="btn btn-primary" onclick="sendMessage()">➡️ Send</button>
+            <button class="btn btn-danger" onclick="speakToggle()">🎙️ Voice</button>
+          </div>
+        </div>
+
+    <div id="midi" class="section">
+      <h1>🎹 MIDI Generator</h1>
+      <input type="text" id="midiPrompt" placeholder="e.g., Trap piano in C minor, 140 bpm" />
+      <button onclick="genMidi()">🎼 Generate</button>
+      <p id="midiResult"></p>
+    </div>
+
+    <div id="sync" class="section">
+      <h1>🎬 Sync Brief Matching</h1>
+      <p>Paste a sync brief or use Screen Info Mode, then get track suggestions.</p>
+
+      <textarea id="syncBriefInput" placeholder="Paste sync brief text here..." rows="6"></textarea>
+      <br />
+      <button onclick="matchSyncBrief()">🔍 Match Tracks</button>
+      <p id="syncResult"></p>
+    </div>
+
+    <div id="export" class="section">
+      <h1>📂 Export & Reports</h1>
+      <p>Export your catalog and progress as CSV, Excel, or JSON.</p>
+
+      <button onclick="exportData('csv')">📄 Export CSV</button>
+      <button onclick="exportData('xlsx')">📊 Export Excel</button>
+      <button onclick="exportData('json')">📝 Export JSON</button>
+      <p id="exportResult"></p>
+    </div>
+
+    <div id="plugins" class="section">
+      <h1>🎛️ Plugin & Sample Manager</h1>
+
+      <h2>Plugins</h2>
+      <input type="file" id="pluginUpload" webkitdirectory directory onchange="uploadPlugins(event)" />
+      <p id="pluginResult"></p>
+
+      <h2>Samples</h2>
+      <input type="file" id="sampleUpload" webkitdirectory directory onchange="uploadSamples(event)" />
+      <p id="sampleResult"></p>
+      
+      <h3>Sample Library</h3>
+      <table id="samplesTable" border="1" cellpadding="6" cellspacing="0">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Tags</th>
+            <th>Play</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be injected here -->
+        </tbody>
+      </table>
+
+      <label>
+        <input type="checkbox" id="autoTag" checked />
+        🤖 Auto-tag with AI when uploading
+      </label>
+
+      <h2>AI Suggestion</h2>
+      <input type="text" id="sampleQuery" placeholder="e.g., dark trap snare" />
+      <button onclick="findSample()">🔍 Find Sample</button>
+      <p id="aiSampleResult"></p>
+    </div>
+
+    <div id="search" class="section">
+      <h1>🔍 Advanced Search</h1>
+
+      <h2>Search Tracks</h2>
+      <input type="text" id="trackQuery" placeholder="e.g., dark trap 140 bpm" />
+      <button onclick="searchTracks()">🎶 Search</button>
+      <p id="trackSearchResult"></p>
+
+      <h2>Search Samples</h2>
+      <input type="text" id="sampleQuery2" placeholder="e.g., snare punchy" />
+      <button onclick="searchSamples()">🥁 Search</button>
+      <p id="sampleSearchResult"></p>
+
+      <h2>Search Plugins</h2>
+      <input type="text" id="pluginQuery" placeholder="e.g., reverb VST3" />
+      <button onclick="searchPlugins()">🎛️ Search</button>
+      <p id="pluginSearchResult"></p>
+    </div>
+
+    <div id="timeline" class="section stack">
+      <h1>📅 Timeline</h1>
+
+      <div class="panel stack">
+        <h2>Add Event</h2>
+        <input type="text" id="eventTitle" class="input" placeholder="Event Title" />
+        <input type="date" id="eventDate" class="input" />
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="addEvent()">➕ Add Event</button>
+        </div>
+      </div>
+
+      <div class="panel stack" style="max-height:60vh; overflow-y:auto;" id="eventList">
+        <!-- Events injected here -->
+      </div>
+    </div>
+
+    <div id="player" class="section stack">
+      <h1>🎧 Player</h1>
+
+      <div id="playerToggle" class="panel row" style="justify-content:center; gap:10px;">
+        <button class="pill active" onclick="togglePlayer('audio')">🎧 Audio</button>
+        <button class="pill" onclick="togglePlayer('midi')">🎹 MIDI</button>
+      </div>
+
+      <div id="audioPanel" class="stack">
+        <div class="panel stack">
+          <div id="waveform" class="waveform"></div>
+
+          <div class="row" style="justify-content:center; margin-top:12px;">
+            <button class="btn btn-primary" id="btnPlay">▶️ Play</button>
+            <button class="btn btn-danger" id="btnPause">⏸️ Pause</button>
+            <button class="btn-small" id="btnStop">⏹️ Stop</button>
+          </div>
+
+          <div class="progress-wrap" style="margin-top:12px;">
+            <div class="progress-bar" id="playerProgress"></div>
+          </div>
+          <div class="status-strip" id="playerStatus">No track loaded</div>
+        </div>
+      </div>
+
+      <div id="midiPanel" class="stack" style="display:none;">
+        <div class="panel stack">
+          <canvas id="midiRoll" class="midi-roll" width="800" height="180"></canvas>
+
+          <div class="row" style="justify-content:center; margin-top:12px;">
+            <button class="btn btn-primary" id="btnMidiPlay">▶️ Play</button>
+            <button class="btn btn-danger" id="btnMidiPause">⏸️ Pause</button>
+            <button class="btn-small" id="btnMidiStop">⏹️ Stop</button>
+          </div>
+
+          <div class="status-strip" id="midiStatus">No MIDI loaded</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mixmatch" class="section">
+      <h1>🎚️ Mix Reference Matching</h1>
+
+      <h2>Load Reference Track</h2>
+      <input type="file" id="refTrack" accept=".wav,.mp3,.aiff" onchange="setReference(event)" />
+      <p id="refStatus">No reference loaded.</p>
+
+      <h2>Compare Against My Track</h2>
+      <input type="file" id="myTrack" accept=".wav,.mp3,.aiff" onchange="compareMix(event)" />
+      <p id="mixResult"></p>
+    </div>
+
+    <div id="autosort" class="section">
+      <h1>📂 Project Auto-Sorter</h1>
+
+      <h2>Sort Tracks</h2>
+      <label>Sort by:</label>
+      <select id="trackSortKey">
+        <option value="mood">Mood</option>
+        <option value="bpm">BPM</option>
+        <option value="key">Key</option>
+        <option value="progress">Progress</option>
+      </select>
+      <button onclick="sortTracks()">🔀 Sort Tracks</button>
+      <div id="trackSortResult"></div>
+
+      <h2>Sort Samples</h2>
+      <label>Sort by:</label>
+      <select id="sampleSortKey">
+        <option value="tags">Tags</option>
+        <option value="name">Name</option>
+      </select>
+      <button onclick="sortSamples()">🔀 Sort Samples</button>
+      <div id="sampleSortResult"></div>
+
+      <h2>Auto-Sort Into Folders</h2>
+      <p>Physically organize your tracks into folders based on metadata.</p>
+      <label>Sort by:</label>
+      <select id="folderSortKey">
+        <option value="mood">Mood</option>
+        <option value="genre">Genre</option>
+        <option value="key">Key</option>
+        <option value="bpm">BPM</option>
+      </select>
+      <button onclick="autosortFiles()">📁 Auto-Sort Into Folders</button>
+      <div id="folderSortResult"></div>
+    </div>
+
+    <div id="backup" class="section stack">
+      <h1>💾 Backup & Restore</h1>
+
+      <div class="panel stack">
+        <h2>Create Backup</h2>
+        <button class="btn btn-primary" onclick="createBackup()">📦 Backup Now</button>
+        <p id="backupResult" class="helper"></p>
+      </div>
+
+      <div class="panel stack">
+        <h2>Restore Backup</h2>
+        <input type="file" id="restoreFile" accept=".json" onchange="restoreBackup(event)" />
+        <p id="restoreResult" class="helper"></p>
+      </div>
+    </div>
+
+        <div id="tasks" class="section">
+          <h1>✅ Track Tasks</h1>
+          <p>Check off progress for each track:</p>
+          <table id="tasksTable" border="1" cellpadding="6" cellspacing="0">
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Mixed</th>
+                <th>Mastered</th>
+                <th>Tagged</th>
+                <th>Registered</th>
+                <th>Save</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rows injected here -->
+            </tbody>
+          </table>
+        </div>
+        <div id="settings" class="section stack">
+          <h1>⚙️ Settings</h1>
+
+          <!-- AI Provider -->
+          <div class="panel stack">
+            <h2>🤖 AI Provider</h2>
+            <div class="row" id="aiProviders">
+              <button class="pill active" data-provider="openai">OpenAI</button>
+              <button class="pill" data-provider="gemini">Gemini</button>
+              <button class="pill" data-provider="anthropic">Claude</button>
+              <button class="pill" data-provider="nano">Nano Banana</button>
+              <button class="pill" data-provider="gemma">Local Gemma</button>
+            </div>
+          </div>
+
+          <!-- API Keys -->
+          <div class="panel stack">
+            <h2>🔑 API Keys</h2>
+            <div class="stack">
+              <input class="input" type="password" id="openaiKey" placeholder="OpenAI Key" />
+              <input class="input" type="password" id="geminiKey" placeholder="Gemini Key" />
+              <input class="input" type="password" id="anthropicKey" placeholder="Anthropic (Claude) Key" />
+              <input class="input" type="password" id="elevenKey" placeholder="ElevenLabs Key" />
+            </div>
+          </div>
+
+          <!-- Preferences -->
+          <div class="panel stack">
+            <h2>🛠 Preferences</h2>
+            <label class="switch">
+              <input type="checkbox" id="batchMode" />
+              <span>Batch Metadata Mode (auto-advance)</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="voiceConfirm" />
+              <span>Speak confirmations with ElevenLabs</span>
+            </label>
+          </div>
+        </div>
+
+        <div id="notes" class="section stack">
+          <h1>📝 Notes</h1>
+
+          <div class="panel stack">
+            <h2>Add Note</h2>
+            <textarea id="noteInput" class="input" rows="3" placeholder="Type or paste your note..."></textarea>
+            <div class="row" style="justify-content:flex-end;">
+              <button class="btn btn-primary" onclick="addNote()">➕ Add Note</button>
+            </div>
+          </div>
+
+          <div class="panel stack" style="max-height:60vh; overflow-y:auto;" id="noteList">
+            <!-- Notes will be injected here -->
+          </div>
+        </div>
+  </div>
+
+  <!-- Metadata Modal -->
+  <div class="modal" id="metaModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🏷️ Tag & Metadata</h3>
+        <button class="btn-small" onclick="closeMetaModal()">✖</button>
+      </div>
+
+      <div class="stack">
+        <div class="helper">You can speak or type. We'll save to this file and jump to the next.</div>
+        <textarea id="metaInput" class="input" rows="4" placeholder='e.g., Genre: Dark Trap | Mood: Energetic | BPM: 140 | Key: C minor | Tags: kick, snare, hat'></textarea>
+
+        <div class="row">
+          <button class="mic" id="btnMic" onclick="toggleMic()">🎙️ Speak</button>
+          <div class="helper" id="micHint">Mic off</div>
+        </div>
+
+        <div class="row" style="flex-wrap:wrap; gap:8px;">
+          <button class="tag" onclick="appendChip('Genre: Trap')">Trap</button>
+          <button class="tag" onclick="appendChip('Mood: Dark')">Dark</button>
+          <button class="tag" onclick="appendChip('BPM: 140')">140 BPM</button>
+          <button class="tag" onclick="appendChip('Key: C minor')">C minor</button>
+          <button class="tag kick" onclick="appendChip('Tags: kick')">Kick</button>
+          <button class="tag snare" onclick="appendChip('Tags: snare')">Snare</button>
+          <button class="tag hihat" onclick="appendChip('Tags: hihat')">Hi-Hat</button>
+        </div>
+
+        <div class="batch-note">Tip: turn on "Batch Mode" in Settings to auto-advance through items with missing fields.</div>
+
+        <div class="actions">
+          <button class="btn-small" onclick="closeMetaModal()">Cancel</button>
+          <button class="btn-small primary" onclick="saveMeta()">Save & Next ➜</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showSection(sectionId) {
+      document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.remove('active');
+      });
+      document.getElementById(sectionId).classList.add('active');
+    }
+
+    function togglePlayer(type){
+      document.querySelectorAll('#playerToggle .pill').forEach(b=>b.classList.remove('active'));
+      if(type==='audio'){
+        document.querySelector('#playerToggle .pill:nth-child(1)').classList.add('active');
+        document.getElementById('audioPanel').style.display='block';
+        document.getElementById('midiPanel').style.display='none';
+      }else{
+        document.querySelector('#playerToggle .pill:nth-child(2)').classList.add('active');
+        document.getElementById('audioPanel').style.display='none';
+        document.getElementById('midiPanel').style.display='block';
+      }
+    }
+  </script>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function loadTracks() {
+      ipcRenderer.invoke('get-tracks').then(tracks => {
+        const tbody = document.querySelector('#tracksTable tbody');
+        tbody.innerHTML = ''; // clear old rows
+
+        tracks.forEach(track => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${track.filename}</td>
+            <td><input value="${track.genre || ''}" data-id="${track.id}" data-field="genre"></td>
+            <td><input value="${track.mood || ''}" data-id="${track.id}" data-field="mood"></td>
+            <td><input value="${track.bpm || ''}" data-id="${track.id}" data-field="bpm"></td>
+            <td><input value="${track.key || ''}" data-id="${track.id}" data-field="key"></td>
+            <td><input value="${track.notes || ''}" data-id="${track.id}" data-field="notes"></td>
+            <td><button onclick="playSample('${track.filepath}')">▶️ Play</button></td>
+            <td><button onclick="saveTrack(${track.id})">💾</button></td>
+          `;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function saveTrack(id) {
+      const inputs = document.querySelectorAll(`[data-id="${id}"]`);
+      const update = {};
+      inputs.forEach(input => {
+        update[input.dataset.field] = input.value;
+      });
+
+      ipcRenderer.send('update-track', { id, ...update });
+    }
+
+    function loadTasks() {
+      ipcRenderer.invoke('get-tasks').then(rows => {
+        const tbody = document.querySelector('#tasksTable tbody');
+        tbody.innerHTML = '';
+
+        rows.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${row.filename}</td>
+            <td><input type="checkbox" data-id="${row.track_id}" data-field="mixed" ${row.mixed ? 'checked' : ''}></td>
+            <td><input type="checkbox" data-id="${row.track_id}" data-field="mastered" ${row.mastered ? 'checked' : ''}></td>
+            <td><input type="checkbox" data-id="${row.track_id}" data-field="tagged" ${row.tagged ? 'checked' : ''}></td>
+            <td><input type="checkbox" data-id="${row.track_id}" data-field="registered" ${row.registered ? 'checked' : ''}></td>
+            <td><button onclick="saveTask(${row.track_id})">💾</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function saveTask(trackId) {
+      const inputs = document.querySelectorAll(`[data-id="${trackId}"]`);
+      const update = {};
+      inputs.forEach(input => {
+        update[input.dataset.field] = input.checked ? 1 : 0;
+      });
+      ipcRenderer.send('update-task', { trackId, ...update });
+    }
+
+    function generateIdea() {
+      ipcRenderer.invoke('generate-idea').then(filePath => {
+        document.getElementById('ideaResult').innerText =
+          "✅ Idea saved: " + filePath;
+      });
+    }
+
+    function generateMLMusic() {
+      const prompt = document.getElementById("mlPrompt").value.trim();
+      if (!prompt) {
+        document.getElementById("mlResult").innerText = "⚠️ Please enter a prompt first!";
+        return;
+      }
+      ipcRenderer.invoke("generate-ml-music", prompt).then(result => {
+        document.getElementById("mlResult").innerText = result;
+      });
+    }
+
+    function generateAdvancedML() {
+      const prompt = document.getElementById("advancedMLPrompt").value.trim();
+      if (!prompt) {
+        document.getElementById("advancedMLResult").innerText = "⚠️ Please enter a prompt first!";
+        return;
+      }
+      ipcRenderer.invoke("generate-advanced-ml", prompt).then(result => {
+        document.getElementById("advancedMLResult").innerText = result;
+      });
+    }
+
+    function analyzeLibrary(event) {
+      const files = Array.from(event.target.files);
+      const paths = files.map(f => f.path);
+      ipcRenderer.invoke("analyze-midi-library", paths).then(result => {
+        document.getElementById("trainingResult").innerText = result;
+      });
+    }
+
+    function generatePersonalized() {
+      const prompt = document.getElementById("advancedMLPrompt").value.trim();
+      if (!prompt) {
+        document.getElementById("trainingResult").innerText = "⚠️ Please enter a prompt first!";
+        return;
+      }
+      ipcRenderer.invoke("generate-personalized", prompt).then(result => {
+        document.getElementById("trainingResult").innerText = result;
+      });
+    }
+
+        let currentMIDIAnalysis = null;
+
+        function uploadMIDI(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const buffer = new Uint8Array(e.target.result);
+            ipcRenderer.invoke("analyze-midi", buffer).then(result => {
+              currentMIDIAnalysis = result;
+              document.getElementById("midiResult").innerText =
+                "✅ MIDI analyzed: " + JSON.stringify(result, null, 2);
+              
+              // Show save button if analysis was successful
+              if (result && !result.error) {
+                document.getElementById("savePatternsBtn").style.display = "inline-block";
+              }
+            });
+          };
+          reader.readAsArrayBuffer(file);
+        }
+
+        function saveMIDIPatterns() {
+          if (!currentMIDIAnalysis) {
+            alert("No MIDI analysis to save!");
+            return;
+          }
+
+          ipcRenderer.invoke("save-midi-patterns", currentMIDIAnalysis).then(result => {
+            if (result.success) {
+              document.getElementById("midiResult").innerText += "\n\n💾 Patterns saved to database!";
+              document.getElementById("savePatternsBtn").style.display = "none";
+            } else {
+              alert("Error saving patterns: " + result.error);
+            }
+          });
+        }
+
+        function uploadAudio(event) {
+          const files = Array.from(event.target.files).slice(0, 12); // max 12 files
+          const paths = files.map(f => f.path);
+
+          ipcRenderer.invoke("analyze-audio", paths).then(result => {
+            document.getElementById("audioResult").innerText =
+              "✅ Audio Analysis:\n" + JSON.stringify(result, null, 2);
+          });
+        }
+
+    function genMidi() {
+      const prompt = document.getElementById("midiPrompt").value.trim();
+      ipcRenderer.invoke("generate-midi", prompt).then(result => {
+        document.getElementById("midiResult").innerText = "✅ MIDI generated: " + result;
+        // Load the generated MIDI file into the MIDI roll
+        if (result && result.includes('.mid')) {
+          loadMidi(result);
+        }
+      });
+    }
+
+    // Metadata Modal Functions
+    function openMetaModal(fileId) {
+      const modal = document.getElementById('metaModal');
+      modal.classList.add('open');
+      modal.setAttribute('aria-hidden', 'false');
+      document.getElementById('metaInput').focus();
+    }
+
+    function closeMetaModal() {
+      const modal = document.getElementById('metaModal');
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
+      document.getElementById('metaInput').value = '';
+    }
+
+    function appendChip(text) {
+      const input = document.getElementById('metaInput');
+      const currentValue = input.value;
+      const newValue = currentValue ? `${currentValue} | ${text}` : text;
+      input.value = newValue;
+    }
+
+    function toggleMic() {
+      const btnMic = document.getElementById('btnMic');
+      const micHint = document.getElementById('micHint');
+      
+      if (btnMic.textContent.includes('🎙️')) {
+        // Start voice recognition
+        btnMic.textContent = '🛑 Stop';
+        micHint.textContent = 'Listening...';
+        
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          const input = document.getElementById('metaInput');
+          const currentValue = input.value;
+          input.value = currentValue ? `${currentValue} ${transcript}` : transcript;
+        };
+        
+        recognition.onend = function() {
+          btnMic.textContent = '🎙️ Speak';
+          micHint.textContent = 'Mic off';
+        };
+        
+        recognition.onerror = function(event) {
+          console.error('Speech recognition error:', event.error);
+          btnMic.textContent = '🎙️ Speak';
+          micHint.textContent = 'Mic off';
+        };
+        
+        recognition.start();
+      } else {
+        // Stop voice recognition
+        btnMic.textContent = '🎙️ Speak';
+        micHint.textContent = 'Mic off';
+      }
+    }
+
+    function saveMeta() {
+      const metadata = document.getElementById('metaInput').value.trim();
+      if (!metadata) {
+        alert('Please enter some metadata before saving.');
+        return;
+      }
+      
+      // Here you would typically save the metadata to the database
+      console.log('Saving metadata:', metadata);
+      
+      // Close modal and move to next item
+      closeMetaModal();
+      
+      // Show success message
+      alert('✅ Metadata saved! Moving to next item...');
+    }
+
+    function openProject(filePath) {
+      // Open project file in default application
+      console.log('Opening project:', filePath);
+      // Implementation would depend on the platform
+    }
+
+    /* ===== UI state ===== */
+    const locBtns = document.querySelectorAll('#scanLocations .pill');
+    const filterBtns = document.querySelectorAll('#filters .pill');
+    const progressBar = document.getElementById('progressBar');
+    const statusStrip = document.getElementById('statusStrip');
+    const resultsWrap = document.getElementById('results');
+
+    let currentFilter = 'logic';
+    let currentLoc = 'user';
+    let scanning = false;
+    let micOn = false;
+    let recognition = null;
+    let metaQueue = [];
+    let metaIndex = 0;
+    let currentItemId = null;
+
+    // Initialize UI interactions
+    locBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        locBtns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentLoc = btn.dataset.loc;
+      });
+    });
+    filterBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        filterBtns.forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        updateStatus(0,0);
+      });
+    });
+
+    /* ===== Scan controls ===== */
+    document.getElementById('btnScan').addEventListener('click', startScan);
+    document.getElementById('btnStop').addEventListener('click', stopScan);
+
+    function startScan(){
+      if(scanning) return;
+      scanning = true;
+      animateProgress(0);
+      statusStrip.textContent = 'Scanning... applying ' + (document.getElementById('deepScan').checked ? 'Deep Scan' : 'Quick Scan');
+      // Simulated scan UI (replace with your real invoke)
+      const total = 150; let found = 0; resultsWrap.querySelectorAll('.result').forEach(r=>r.remove());
+      const tick = setInterval(()=>{
+        if(!scanning){ clearInterval(tick); return; }
+        found += Math.floor(Math.random()*5);
+        const pct = Math.min(100, Math.floor((found/total)*100));
+        animateProgress(pct);
+        updateStatus(Math.min(found,total), total);
+        if (Math.random() > .75) addFakeResult();
+        if (pct>=100){ clearInterval(tick); scanning=false; animateProgress(100); }
+      }, 220);
+    }
+    function stopScan(){ scanning=false; statusStrip.textContent = 'Scan stopped.'; }
+
+    function animateProgress(p){ progressBar.style.width = p + '%'; }
+    function updateStatus(shown,total){
+      statusStrip.textContent = `Showing ${Math.min(shown,total)} of ${total} files (${currentFilter} filter)`;
+    }
+
+    /* ===== Results templating (fake for demo) ===== */
+    function addFakeResult(){
+      const div = document.createElement('div');
+      div.className = 'result';
+      const id = Date.now();
+      const sizes = (30+Math.random()*20).toFixed(1) + ' MB';
+      div.innerHTML = `
+        <div>
+          <h4>Session_${id % 999}.${ currentFilter==='logic' ? 'logic' : 'proj' } <span class="tag ok">DAW Project</span></h4>
+          <div class="meta">${cap(currentFilter)} Project · ${8+Math.floor(Math.random()*8)} tracks, ${3+Math.floor(Math.random()*8)} plugins · ${sizes}</div>
+          <div class="row" style="margin-top:8px;gap:8px;">
+            ${badgeRoll()}
+          </div>
+        </div>
+        <div class="row">
+          <button class="btn-small primary" onclick="openProject('/path/${id}')">📂 Open Project</button>
+          <button class="btn-small accent" onclick="openMetaModal(${id})">🏷️ Add Tags</button>
+        </div>
+      `;
+      resultsWrap.appendChild(div);
+    }
+    function badgeRoll(){
+      const pool = ['<span class="tag kick">Kick</span>','<span class="tag snare">Snare</span>','<span class="tag hihat">Hi-Hat</span>','<span class="tag loop">Loop</span>','<span class="tag pad">Pad</span>'];
+      return pool.sort(()=>Math.random()-0.5).slice(0,3).join('');
+    }
+    function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+    /* ===== Metadata modal (voice or type) ===== */
+    function openMetaModal(itemId){
+      currentItemId = itemId;
+      document.getElementById('metaModal').classList.add('open');
+      document.getElementById('metaInput').focus();
+    }
+    function closeMetaModal(){
+      if(micOn) toggleMic();
+      currentItemId = null;
+      document.getElementById('metaModal').classList.remove('open');
+    }
+    function appendChip(text){
+      const ta = document.getElementById('metaInput');
+      ta.value = (ta.value + (ta.value ? ' | ' : '') + text).trim();
+    }
+
+    /* Save & next (hook this to your DB) */
+    async function saveMeta(){
+      const text = document.getElementById('metaInput').value.trim();
+      if(!text) return closeMetaModal();
+      await ipcRenderer?.invoke?.('save-metadata', { id: currentItemId, text });
+      document.getElementById('metaInput').value = '';
+      // advance to next in queue if you implement batch mode
+      closeMetaModal();
+    }
+
+    /* Simple mic via Web Speech API for testing (Electron Chromium) */
+    function toggleMic(){
+      const hint = document.getElementById('micHint');
+      if(!('webkitSpeechRecognition' in window)){
+        hint.textContent = 'Mic not supported here (use type).';
+        return;
+      }
+      if(!recognition){
+        recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        recognition.onresult = (e)=>{
+          const t = document.getElementById('metaInput');
+          let final = '';
+          for(let i=e.resultIndex;i<e.results.length;i++){
+            final += e.results[i][0].transcript;
+          }
+          t.value = (t.value + ' ' + final).trim();
+        };
+        recognition.onend = ()=>{ if(micOn) recognition.start(); };
+      }
+      if(!micOn){ recognition.start(); micOn=true; document.getElementById('btnMic').textContent='🛑 Stop'; hint.textContent='Listening… speak your tags'; }
+      else{ recognition.stop(); micOn=false; document.getElementById('btnMic').textContent='🎙️ Speak'; hint.textContent='Mic off'; }
+    }
+
+        function captureScreen() {
+          ipcRenderer.invoke("capture-screen").then(result => {
+            document.getElementById("screenResult").innerText =
+              "📑 Extracted Text:\n" + result;
+          });
+        }
+
+        function getDailySummary() {
+          ipcRenderer.invoke("daily-summary").then(summary => {
+            document.getElementById("dailySummaryText").innerText = summary;
+          });
+        }
+
+        function matchSyncBrief() {
+          const brief = document.getElementById("syncBriefInput").value.trim();
+          if (!brief) return alert("⚠️ Please enter a sync brief first!");
+
+          ipcRenderer.invoke("match-sync", brief).then(result => {
+            document.getElementById("syncResult").innerText = result;
+          });
+        }
+
+        function exportData(format) {
+          ipcRenderer.invoke("export-data", format).then(filePath => {
+            document.getElementById("exportResult").innerText =
+              "✅ Exported to: " + filePath;
+          });
+        }
+
+        function uploadPlugins(event) {
+          const files = Array.from(event.target.files);
+          const paths = files.map(f => f.path);
+          ipcRenderer.invoke("add-plugins", paths).then(msg => {
+            document.getElementById("pluginResult").innerText = msg;
+          });
+        }
+
+        function uploadSamples(event) {
+          const autoTag = document.getElementById("autoTag").checked;
+          const files = Array.from(event.target.files);
+          const paths = files.map(f => f.path);
+          ipcRenderer.invoke("add-samples", { paths, autoTag }).then(msg => {
+            document.getElementById("sampleResult").innerText = msg;
+            loadSamples(); // Refresh the samples list
+          });
+        }
+
+        function loadSamples() {
+          ipcRenderer.invoke("get-samples").then(samples => {
+            const tbody = document.querySelector("#samplesTable tbody");
+            tbody.innerHTML = ""; // clear old rows
+            samples.forEach(sample => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${sample.name}</td>
+                <td>${sample.tags || ""}</td>
+                <td><button onclick="playSample('${sample.path}')">▶️ Play</button></td>
+              `;
+              tbody.appendChild(row);
+            });
+          });
+        }
+
+        function findSample() {
+          const query = document.getElementById("sampleQuery").value.trim();
+          if (!query) return;
+          ipcRenderer.invoke("find-sample", query).then(result => {
+            document.getElementById("aiSampleResult").innerText = result;
+          });
+        }
+
+        function searchTracks() {
+          const q = document.getElementById("trackQuery").value.trim();
+          ipcRenderer.invoke("search-tracks", q).then(result => {
+            document.getElementById("trackSearchResult").innerText = result;
+          });
+        }
+
+        function searchSamples() {
+          const q = document.getElementById("sampleQuery2").value.trim();
+          ipcRenderer.invoke("search-samples", q).then(result => {
+            document.getElementById("sampleSearchResult").innerText = result;
+          });
+        }
+
+        function searchPlugins() {
+          const q = document.getElementById("pluginQuery").value.trim();
+          ipcRenderer.invoke("search-plugins", q).then(result => {
+            document.getElementById("pluginSearchResult").innerText = result;
+          });
+        }
+
+        function addEvent() {
+          const title = document.getElementById("eventTitle").value.trim();
+          const date = document.getElementById("eventDate").value;
+          
+          if (!title || !date) {
+            alert("Please fill in both title and date");
+            return;
+          }
+
+          const event = {
+            title: title,
+            description: "",
+            date: date,
+            type: "general"
+          };
+          
+          ipcRenderer.invoke("add-event", event).then(msg => {
+            document.getElementById("eventTitle").value = "";
+            document.getElementById("eventDate").value = "";
+            loadTimeline();
+          });
+        }
+
+        function loadTimeline() {
+          ipcRenderer.invoke("get-events").then(events => {
+            const listDiv = document.getElementById("eventList");
+            listDiv.innerHTML = "";
+            
+            if (events.length === 0) {
+              listDiv.innerHTML = '<p style="text-align:center; color:#666;">No events yet. Add your first event above!</p>';
+              return;
+            }
+
+            events.forEach(e => {
+              const div = document.createElement("div");
+              div.className = "result";
+              div.innerHTML = `
+                <div>
+                  <h4>${e.title}</h4>
+                  <div class="meta">${e.date}</div>
+                  <div class="meta" style="font-size:12px; margin-top:4px;">
+                    ${e.type} • ${e.description || 'No description'}
+                  </div>
+                </div>
+                <div class="row">
+                  <button class="btn-small primary" onclick="editEvent(${e.id})">✏️ Edit</button>
+                  <button class="btn-small danger" onclick="deleteEvent(${e.id})">🗑️ Delete</button>
+                </div>
+              `;
+              listDiv.appendChild(div);
+            });
+          });
+        }
+
+        function editEvent(id) {
+          const newTitle = prompt("Edit event title:");
+          if (newTitle) {
+            ipcRenderer.invoke("update-event", {
+              id: id,
+              title: newTitle,
+              description: "",
+              date: document.getElementById("eventDate").value || new Date().toISOString().split('T')[0],
+              type: "general"
+            }).then(result => {
+              if (result.success) {
+                loadTimeline();
+              } else {
+                alert("Error updating event: " + result.error);
+              }
+            });
+          }
+        }
+
+        function deleteEvent(id) {
+          if (confirm("Are you sure you want to delete this event?")) {
+            ipcRenderer.invoke("delete-event", id).then(result => {
+              if (result.success) {
+                loadTimeline();
+              } else {
+                alert("Error deleting event: " + result.error);
+              }
+            });
+          }
+        }
+
+        function summarizeTimeline() {
+          ipcRenderer.invoke("summarize-timeline").then(summary => {
+            document.getElementById("timelineSummary").innerText = summary;
+          });
+        }
+
+        // Audio Player functions
+        let wavesurfer;
+
+        function loadAudio(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+
+          if (wavesurfer) wavesurfer.destroy();
+
+          wavesurfer = WaveSurfer.create({
+            container: "#waveform",
+            waveColor: "#888",
+            progressColor: "#0dbaff",
+            height: 100,
+            responsive: true
+          });
+
+          wavesurfer.load(file.path);
+        }
+
+        function playAudio() {
+          if (wavesurfer) wavesurfer.play();
+        }
+
+        function pauseAudio() {
+          if (wavesurfer) wavesurfer.pause();
+        }
+
+        function stopAudio() {
+          if (wavesurfer) {
+            wavesurfer.stop();
+          }
+        }
+
+        function playSample(path) {
+          if (wavesurfer) wavesurfer.destroy();
+
+          wavesurfer = WaveSurfer.create({
+            container: "#waveform",
+            waveColor: "#aaa",
+            progressColor: "#0dbaff",
+            height: 100
+          });
+
+          wavesurfer.load(path);
+          wavesurfer.on("ready", () => wavesurfer.play());
+        }
+
+        // Mix Reference Matching functions
+        let refPath = null;
+
+        function setReference(event) {
+          refPath = event.target.files[0].path;
+          document.getElementById("refStatus").innerText = "✅ Reference Loaded: " + event.target.files[0].name;
+        }
+
+        function compareMix(event) {
+          const myPath = event.target.files[0].path;
+          ipcRenderer.invoke("compare-mix", { refPath, myPath }).then(result => {
+            document.getElementById("mixResult").innerText = result;
+          });
+        }
+
+        // Auto-Sorter functions
+        function sortTracks() {
+          const key = document.getElementById("trackSortKey").value;
+          ipcRenderer.invoke("sort-tracks", key).then(result => {
+            document.getElementById("trackSortResult").innerHTML = result;
+          });
+        }
+
+        function sortSamples() {
+          const key = document.getElementById("sampleSortKey").value;
+          ipcRenderer.invoke("sort-samples", key).then(result => {
+            document.getElementById("sampleSortResult").innerHTML = result;
+          });
+        }
+
+        function autosortFiles() {
+          const key = document.getElementById("folderSortKey").value;
+          ipcRenderer.invoke("autosort-files", key).then(result => {
+            document.getElementById("folderSortResult").innerHTML = result;
+          });
+        }
+
+        // Backup & Restore functions
+        function createBackup() {
+          ipcRenderer.invoke("create-backup").then(result => {
+            document.getElementById("backupResult").innerText = result;
+          });
+        }
+
+        function restoreBackup(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          ipcRenderer.invoke("restore-backup", file.path).then(result => {
+            document.getElementById("restoreResult").innerText = result;
+          });
+        }
+
+        function loadDashboard() {
+          ipcRenderer.invoke("dashboard-stats").then(data => {
+            document.getElementById("statTotal").innerText = data.total;
+            document.getElementById("statComplete").innerText = data.complete;
+            document.getElementById("statInProgress").innerText = data.inProgress;
+            document.getElementById("statUnstarted").innerText = data.unstarted;
+
+            const progressDiv = document.getElementById("progressBars");
+            progressDiv.innerHTML = "";
+
+            data.tracks.forEach(track => {
+              const percent = Math.round((track.done / 4) * 100); // 4 tasks
+              const bar = document.createElement("div");
+              bar.className = "progress";
+              bar.innerHTML = `<div class="progress-bar" style="width:${percent}%">${track.filename} - ${percent}%</div>`;
+              progressDiv.appendChild(bar);
+            });
+          });
+        }
+
+    // Chat Assistant Functions
+    function addMessage(text, sender) {
+      const chatWindow = document.getElementById("chatWindow");
+      const msg = document.createElement("div");
+      msg.classList.add("bubble", sender);
+
+      // Detect if response includes a saved MP3 path
+      if (text.includes(".mp3")) {
+        const [mainText, filePath] = text.split("🔊");
+        msg.innerHTML = `<p>${mainText}</p><a href="file://${filePath.trim()}" target="_blank">🔊 Play Voice</a>`;
+      } else {
+        msg.innerText = text;
+      }
+
+      chatWindow.appendChild(msg);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function addBubble(type,text){
+      const chat=document.getElementById("chatWindow");
+      const div=document.createElement("div");
+      div.className="bubble "+type;
+      div.innerText=text;
+      chat.appendChild(div);
+      chat.scrollTop=chat.scrollHeight;
+    }
+
+    function sendMessage(){
+      const input=document.getElementById("chatInput");
+      const text=input.value.trim();
+      if(!text) return;
+      addBubble("user", text);
+      input.value="";
+
+      ipcRenderer.invoke("assistant-message", { text }).then(reply=>{
+        addBubble("ai", reply);
+        if(document.getElementById("voiceConfirm").checked){
+          ipcRenderer.invoke("speak-message", reply);
+        }
+      });
+    }
+
+    function speakToggle(){
+      // Hook into Web Speech or your recorder
+      alert("🎙️ Voice capture coming soon!");
+    }
+
+    // Allow Enter key to send message
+    document.addEventListener('DOMContentLoaded', function() {
+      const chatInput = document.getElementById('chatInput');
+      if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter') {
+            sendMessage();
+          }
+        });
+      }
+    });
+
+        // Load tracks on page load
+        loadTracks();
+        
+        // Load dashboard on page load
+        loadDashboard();
+        
+        // Load dashboard when tab is clicked
+        document.querySelector('button[onclick="showSection(\'dashboard\')"]').addEventListener("click", loadDashboard);
+        
+    // Load tasks when tab is clicked
+    document.querySelector('button[onclick="showSection(\'tasks\')"]').addEventListener('click', loadTasks);
+    
+    // Load timeline when tab is clicked
+    document.querySelector('button[onclick="showSection(\'timeline\')"]').addEventListener('click', loadTimeline);
+    document.querySelector('button[onclick="showSection(\'plugins\')"]').addEventListener('click', loadSamples);
+    
+    // Load settings when tab is clicked
+    document.querySelector('button[onclick="showSection(\'settings\')"]').addEventListener('click', loadSettings);
+    
+    // Initialize assistant with welcome message
+    document.querySelector('button[onclick="showSection(\'assistant\')"]').addEventListener('click', function() {
+      const chatWindow = document.getElementById('chatWindow');
+      if (chatWindow.children.length === 0) {
+        addMessage("Hello! I'm your music creation assistant. I can help you generate ideas, organize your tracks, and provide creative guidance. What would you like to work on today?", "assistant");
+      }
+    });
+
+    // Apply theme on startup
+        ipcRenderer.invoke("get-settings").then(settings => {
+          if (settings.theme === "light") {
+            document.body.className = "light-theme";
+          } else if (settings.theme === "neon") {
+            document.body.className = "neon-theme";
+          } else {
+            document.body.className = "dark-theme";
+          }
+        });
+
+    // Settings function
+    function saveSettings() {
+      const settings = {
+        provider: document.querySelector('#aiProviders .pill.active').dataset.provider,
+        openaiKey: document.getElementById("openaiKey").value,
+        geminiKey: document.getElementById("geminiKey").value,
+        anthropicKey: document.getElementById("anthropicKey").value,
+        elevenKey: document.getElementById("elevenKey").value,
+        batchMode: document.getElementById("batchMode").checked,
+        voiceConfirm: document.getElementById("voiceConfirm").checked
+      };
+      ipcRenderer.send("save-settings", settings);
+      alert("✅ Settings saved!");
+    }
+
+    // Load settings when settings tab is opened
+    function loadSettings() {
+      ipcRenderer.invoke('load-settings').then(settings => {
+        if (settings) {
+          // Set active provider pill
+          const providerPills = document.querySelectorAll('#aiProviders .pill');
+          providerPills.forEach(pill => pill.classList.remove('active'));
+          const activePill = document.querySelector(`#aiProviders .pill[data-provider="${settings.provider || 'openai'}"]`);
+          if (activePill) activePill.classList.add('active');
+          
+          // Load API keys
+          document.getElementById('openaiKey').value = settings.openaiKey || '';
+          document.getElementById('geminiKey').value = settings.geminiKey || '';
+          document.getElementById('anthropicKey').value = settings.anthropicKey || '';
+          document.getElementById('elevenKey').value = settings.elevenKey || '';
+          
+          // Load preferences
+          document.getElementById('batchMode').checked = settings.batchMode || false;
+          document.getElementById('voiceConfirm').checked = settings.voiceConfirm || false;
+        }
+      });
+    }
+
+    // AI Provider pill interactions
+    document.addEventListener('DOMContentLoaded', function() {
+      const providerPills = document.querySelectorAll('#aiProviders .pill');
+      providerPills.forEach(pill => {
+        pill.addEventListener('click', function() {
+          // Remove active class from all pills
+          providerPills.forEach(p => p.classList.remove('active'));
+          // Add active class to clicked pill
+          this.classList.add('active');
+        });
+      });
+    });
+
+    // Notes Functions
+    function addNote() {
+      const input = document.getElementById('noteInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      ipcRenderer.invoke('add-note', {
+        title: text.substring(0, 50) + (text.length > 50 ? '...' : ''),
+        content: text,
+        category: 'general',
+        tags: ''
+      }).then(result => {
+        if (result.success) {
+          input.value = '';
+          loadNotes();
+        } else {
+          alert('Error adding note: ' + result.error);
+        }
+      });
+    }
+
+    function loadNotes() {
+      ipcRenderer.invoke('get-notes').then(notes => {
+        const noteList = document.getElementById('noteList');
+        noteList.innerHTML = '';
+        
+        if (notes.length === 0) {
+          noteList.innerHTML = '<p style="text-align:center; color:#666;">No notes yet. Add your first note above!</p>';
+          return;
+        }
+
+        notes.forEach(note => {
+          const noteDiv = document.createElement('div');
+          noteDiv.className = 'result';
+          noteDiv.innerHTML = `
+            <div>
+              <h4>${note.title}</h4>
+              <div class="meta">${note.content}</div>
+              <div class="meta" style="font-size:12px; margin-top:4px;">
+                ${note.category} • ${note.created_at}
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn-small primary" onclick="editNote(${note.id})">✏️ Edit</button>
+              <button class="btn-small danger" onclick="deleteNote(${note.id})">🗑️ Delete</button>
+            </div>
+          `;
+          noteList.appendChild(noteDiv);
+        });
+      });
+    }
+
+    function editNote(id) {
+      // Simple edit functionality - could be enhanced with modal
+      const newContent = prompt('Edit note:');
+      if (newContent) {
+        ipcRenderer.invoke('update-note', {
+          id: id,
+          title: newContent.substring(0, 50) + (newContent.length > 50 ? '...' : ''),
+          content: newContent
+        }).then(result => {
+          if (result.success) {
+            loadNotes();
+          } else {
+            alert('Error updating note: ' + result.error);
+          }
+        });
+      }
+    }
+
+    function deleteNote(id) {
+      if (confirm('Are you sure you want to delete this note?')) {
+        ipcRenderer.invoke('delete-note', id).then(result => {
+          if (result.success) {
+            loadNotes();
+          } else {
+            alert('Error deleting note: ' + result.error);
+          }
+        });
+      }
+    }
+
+    // Load notes when notes tab is clicked
+    document.addEventListener('DOMContentLoaded', function() {
+      const notesButton = document.querySelector('button[onclick="showSection(\'notes\')"]');
+      if (notesButton) {
+        notesButton.addEventListener('click', loadNotes);
+      }
+      
+      // Load timeline when timeline tab is clicked
+      const timelineButton = document.querySelector('button[onclick="showSection(\'timeline\')"]');
+      if (timelineButton) {
+        timelineButton.addEventListener('click', loadTimeline);
+      }
+    });
+
+    // Notes
+    function addNote(){
+      const txt = document.getElementById("noteInput").value.trim();
+      if(!txt) return;
+      ipcRenderer.invoke("add-note", txt).then(note=>{
+        renderNote(note);
+        document.getElementById("noteInput").value="";
+      });
+    }
+    function renderNote(note){
+      const div = document.createElement("div");
+      div.className="note-item";
+      div.innerHTML=`<h4>${note.content}</h4><div class="note-meta">${note.author} · ${note.timestamp}</div>`;
+      document.getElementById("noteList").prepend(div);
+    }
+
+    // Timeline
+    function addEvent(){
+      const title=document.getElementById("eventTitle").value.trim();
+      const date=document.getElementById("eventDate").value;
+      if(!title || !date) return;
+      ipcRenderer.invoke("add-event", { title, date }).then(event=>{
+        renderEvent(event);
+        document.getElementById("eventTitle").value="";
+        document.getElementById("eventDate").value="";
+      });
+    }
+    function renderEvent(event){
+      const div=document.createElement("div");
+      div.className="event-item";
+      div.innerHTML=`<h4>${event.title}</h4><div class="event-meta">${event.date}</div>`;
+      document.getElementById("eventList").prepend(div);
+    }
+
+    // Backup
+    function createBackup(){
+      ipcRenderer.invoke("create-backup").then(result=>{
+        document.getElementById("backupResult").innerText=result;
+      });
+    }
+    function restoreBackup(event){
+      const file=event.target.files[0];
+      if(!file) return;
+      ipcRenderer.invoke("restore-backup", file.path).then(result=>{
+        document.getElementById("restoreResult").innerText=result;
+      });
+    }
+
+    // Player Functions
+    let wavesurfer=null;
+
+    function loadTrack(filePath){
+      if(wavesurfer){ wavesurfer.destroy(); }
+      wavesurfer = WaveSurfer.create({
+        container:'#waveform',
+        waveColor:'#44ccff',
+        progressColor:'#ff5edb',
+        cursorColor:'#ffd44d',
+        height:120,
+        barWidth:2,
+        barGap:2,
+        responsive:true
+      });
+
+      wavesurfer.load(filePath);
+
+      wavesurfer.on('ready', ()=>{
+        document.getElementById("playerStatus").textContent = "✅ Loaded: " + filePath.split("/").pop();
+      });
+
+      wavesurfer.on('audioprocess', ()=>{
+        const p = wavesurfer.getCurrentTime()/wavesurfer.getDuration();
+        document.getElementById("playerProgress").style.width = (p*100) + "%";
+      });
+
+      wavesurfer.on('finish', ()=>{
+        document.getElementById("playerStatus").textContent="Track finished";
+      });
+    }
+
+    // Controls
+    document.getElementById("btnPlay").addEventListener("click", ()=>{ wavesurfer?.play(); });
+    document.getElementById("btnPause").addEventListener("click", ()=>{ wavesurfer?.pause(); });
+    document.getElementById("btnStop").addEventListener("click", ()=>{
+      if(wavesurfer){ wavesurfer.stop(); document.getElementById("playerProgress").style.width="0%"; }
+    });
+
+    // MIDI Roll Functions
+    let midiData=null;
+    let midiPart=null;
+    let ctx=document.getElementById("midiRoll").getContext("2d");
+    let isPlaying=false;
+
+    async function loadMidi(filePath){
+      const res=await fetch("file://"+filePath);
+      const buf=await res.arrayBuffer();
+      midiData=new Midi(buf);
+
+      drawMidiRoll();
+      document.getElementById("midiStatus").textContent="✅ MIDI Loaded: "+filePath.split("/").pop();
+
+      // Setup playback
+      midiPart=new Tone.Part((time,note)=>{
+        const synth=new Tone.Synth().toDestination();
+        synth.triggerAttackRelease(note.name, note.duration, time, note.velocity);
+      }, midiData.tracks[0].notes).start(0);
+    }
+
+    function drawMidiRoll(){
+      ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+      if(!midiData) return;
+      const track=midiData.tracks[0];
+      const notes=track.notes;
+      const maxTime=Math.max(...notes.map(n=>n.time+n.duration));
+      const h=ctx.canvas.height;
+      const w=ctx.canvas.width;
+
+      notes.forEach(n=>{
+        const x=(n.time/maxTime)*w;
+        const noteHeight=8;
+        const y=h-(n.midi-40)*noteHeight;
+        const width=(n.duration/maxTime)*w;
+        ctx.fillStyle="rgba(68,204,255,0.8)";
+        ctx.strokeStyle="#ff5edb";
+        ctx.fillRect(x,y-6,width,6);
+        ctx.strokeRect(x,y-6,width,6);
+      });
+    }
+
+    document.getElementById("btnMidiPlay").addEventListener("click",async ()=>{
+      if(!midiData) return;
+      if(!isPlaying){
+        await Tone.start();
+        Tone.Transport.start();
+        isPlaying=true;
+        document.getElementById("midiStatus").textContent="▶️ Playing MIDI...";
+      }
+    });
+    document.getElementById("btnMidiPause").addEventListener("click",()=>{
+      if(isPlaying){ Tone.Transport.pause(); isPlaying=false; document.getElementById("midiStatus").textContent="⏸️ Paused"; }
+    });
+    document.getElementById("btnMidiStop").addEventListener("click",()=>{
+      Tone.Transport.stop(); isPlaying=false;
+      document.getElementById("midiStatus").textContent="⏹️ Stopped";
+    });
+  </script>
+</body>
+</html>
