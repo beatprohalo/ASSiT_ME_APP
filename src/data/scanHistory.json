@@ -1,0 +1,96 @@
+{
+  "recentScans": [
+    {
+      "id": "1758850654995",
+      "timestamp": "2025-09-26T01:37:34.995Z",
+      "location": "/Volumes/T7/Cosmos Samples/PRODUCER CHOICE/336V2/Maschine Format - Sean Divine - The 336 Kit V2/Sean Divine 1 Samples/AnalogTrip96BPM Loop_336V2.wav",
+      "fileCount": 0,
+      "audioFiles": 0,
+      "midiFiles": 0,
+      "projectFiles": 0,
+      "duration": 22,
+      "errors": [
+        "Error reading directory /Volumes/T7/Cosmos Samples/PRODUCER CHOICE/336V2/Maschine Format - Sean Divine - The 336 Kit V2/Sean Divine 1 Samples/AnalogTrip96BPM Loop_336V2.wav: ENOTDIR: not a directory, scandir '/Volumes/T7/Cosmos Samples/PRODUCER CHOICE/336V2/Maschine Format - Sean Divine - The 336 Kit V2/Sean Divine 1 Samples/AnalogTrip96BPM Loop_336V2.wav'"
+      ]
+    },
+    {
+      "id": "1758849953694",
+      "timestamp": "2025-09-26T01:25:53.694Z",
+      "location": "/Volumes/T7/Cosmos Samples/Cymatics Collection",
+      "fileCount": 6031,
+      "audioFiles": 3,
+      "midiFiles": 568,
+      "projectFiles": 0,
+      "duration": 25470,
+      "errors": []
+    },
+    {
+      "id": "1758848965401",
+      "timestamp": "2025-09-26T01:09:25.401Z",
+      "location": "/Volumes/T7",
+      "fileCount": 501,
+      "audioFiles": 0,
+      "midiFiles": 411,
+      "projectFiles": 0,
+      "duration": 2406,
+      "errors": []
+    },
+    {
+      "id": "1758847796956",
+      "timestamp": "2025-09-26T00:49:56.956Z",
+      "location": "/Volumes/T7/2EASY",
+      "fileCount": 501,
+      "audioFiles": 0,
+      "midiFiles": 412,
+      "projectFiles": 0,
+      "duration": 1902,
+      "errors": []
+    },
+    {
+      "id": "1758847496571",
+      "timestamp": "2025-09-26T00:44:56.571Z",
+      "location": "/Volumes/T7/2EASY",
+      "fileCount": 501,
+      "audioFiles": 0,
+      "midiFiles": 412,
+      "projectFiles": 0,
+      "duration": 1565,
+      "errors": []
+    }
+  ],
+  "favoriteLocations": [
+    {
+      "path": "/Volumes/T7/2EASY",
+      "name": "2EASY",
+      "scanCount": 2,
+      "firstScanned": "2025-09-26T00:44:56.571Z",
+      "lastScanned": "2025-09-26T00:49:56.956Z"
+    },
+    {
+      "path": "/Volumes/T7",
+      "name": "T7",
+      "scanCount": 1,
+      "firstScanned": "2025-09-26T01:09:25.401Z",
+      "lastScanned": "2025-09-26T01:09:25.401Z"
+    },
+    {
+      "path": "/Volumes/T7/Cosmos Samples/Cymatics Collection",
+      "name": "Cymatics Collection",
+      "scanCount": 1,
+      "firstScanned": "2025-09-26T01:25:53.694Z",
+      "lastScanned": "2025-09-26T01:25:53.694Z"
+    },
+    {
+      "path": "/Volumes/T7/Cosmos Samples/PRODUCER CHOICE/336V2/Maschine Format - Sean Divine - The 336 Kit V2/Sean Divine 1 Samples/AnalogTrip96BPM Loop_336V2.wav",
+      "name": "AnalogTrip96BPM Loop_336V2.wav",
+      "scanCount": 1,
+      "firstScanned": "2025-09-26T01:37:34.995Z",
+      "lastScanned": "2025-09-26T01:37:34.995Z"
+    }
+  ],
+  "scanStats": {
+    "totalScans": 5,
+    "totalFilesFound": 7534,
+    "lastScanDate": "2025-09-26T01:37:34.995Z"
+  }
+}
