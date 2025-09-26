@@ -1067,13 +1067,26 @@
     }
 
     // Listener for scan completion
-    ipcRenderer.on('scan-complete', (event, fileCount) => {
+    ipcRenderer.on('scan-complete', (event, result) => {
       scanning = false;
       animateProgress(100);
+
+      // Handle cases where the scan was cancelled or did not succeed
+      if (!result || !result.success) {
+        if (result && result.cancelled) {
+          statusStrip.textContent = 'Scan cancelled by user.';
+        } else {
+          statusStrip.textContent = '⚠️ Scan finished. No new supported audio files were found.';
+        }
+        animateProgress(0); // Reset progress if cancelled or empty
+        return;
+      }
+
+      // Handle successful scan
+      const fileCount = result.scanData.fileCount;
       if (fileCount > 0) {
         statusStrip.textContent = `✅ Scan Complete! Found ${fileCount} supported audio files.`;
-        // Optionally, refresh the library view
-        loadTracks();
+        loadTracks(); // Refresh the library view
       } else {
         statusStrip.textContent = '⚠️ Scan finished. No new supported audio files were found.';
       }
