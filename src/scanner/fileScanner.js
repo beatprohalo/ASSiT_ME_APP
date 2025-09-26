@@ -101,6 +101,29 @@ class FileScanner {
     return results;
   }
 
+  async processSingleFile(filePath) {
+    console.log(`Processing single file: ${filePath}`);
+    const results = {
+      tracks: [],
+      projects: [],
+      errors: []
+    };
+    
+    try {
+      await this.processFile(filePath, results);
+      console.log(`📊 Single file processing complete. Found ${results.tracks.length} files:`);
+      console.log(`   🎵 Audio files: ${results.tracks.filter(t => ['wav', 'mp3', 'aiff', 'aif', 'flac', 'm4a', 'ogg', 'wma', 'aac'].includes(t.format)).length}`);
+      console.log(`   🎼 MIDI files: ${results.tracks.filter(t => ['mid', 'midi'].includes(t.format)).length}`);
+      console.log(`   Projects: ${results.projects.length} files`);
+      
+      return results;
+    } catch (error) {
+      console.error('Single file processing failed:', error);
+      results.errors.push(`Single file processing failed: ${error.message}`);
+      return results;
+    }
+  }
+
   async scanDirectory(dirPath, results) {
     try {
       console.log(`📁 Scanning directory: ${dirPath}`);

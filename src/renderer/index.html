@@ -299,26 +299,20 @@
     
     <!-- Enhanced features scripts -->
     <script>
-      const { ipcRenderer } = require('electron');
-
-      document.getElementById('scanBtn').addEventListener('click', async () => {
-        const files = await ipcRenderer.invoke('select-folder');
-        const list = document.getElementById('list');
-        list.innerHTML = '';
-
-        if (files.length === 0) {
-          alert('No valid audio files found (.wav, .mp3, .aiff, .flac).');
-          return;
-        }
-
-        files.forEach(file => {
-          const li = document.createElement('li');
-          li.textContent = file;
-          list.appendChild(li);
-        });
-
-        alert(`Found ${files.length} audio file(s).`);
+      // Enhanced folder selection and scanning with secure contextBridge
+      document.addEventListener('DOMContentLoaded', () => {
+        // Wait for the app to initialize
+        setTimeout(() => {
+          if (window.electronAPI && window.electronAPI.selectFolderAndScan) {
+            console.log('Enhanced scanning API available');
+          } else {
+            console.log('Enhanced scanning API not available, using fallback');
+          }
+        }, 1000);
       });
+
+      // Enhanced scan button functionality - handled by app.js
+      // No duplicate event listeners needed
     </script>
 </body>
 </html>

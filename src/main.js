@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const { Database } = require('./database/database');
 const { FileScanner } = require('./scanner/fileScanner');
 const { AdvancedSampleManager } = require('./sampleManager/advancedSampleManager');
@@ -73,18 +74,13 @@ class App {
 
   createWindow() {
     this.mainWindow = new BrowserWindow({
-      width: 1400,
-      height: 900,
-      minWidth: 1200,
-      minHeight: 700,
+      width: 800,
+      height: 600,
       webPreferences: {
         preload: path.join(__dirname, 'preload.js'),
-        nodeIntegration: false,
         contextIsolation: true,
-        enableRemoteModule: false
-      },
-      titleBarStyle: 'hiddenInset',
-      show: false
+        nodeIntegration: false
+      }
     });
 
     this.mainWindow.loadFile('src/renderer/index.html');
@@ -183,6 +179,35 @@ class App {
       }
     });
 
+    // Enhanced folder selection with direct scanning
+    ipcMain.handle('select-folder-and-scan', async () => {
+      try {
+        const result = await dialog.showOpenDialog(this.mainWindow, {
+          properties: ['openDirectory'],
+          title: 'Select Folder to Scan'
+        });
+
+        if (result.canceled || result.filePaths.length === 0) return [];
+
+        const folderPath = result.filePaths[0];
+        console.log(`Starting scan of folder: ${folderPath}`);
+        
+        try {
+          const files = scanFolder(folderPath);
+          console.log(`Scan completed. Found ${files.length} files.`);
+          return files;
+        } catch (scanError) {
+          console.error(`Scan error for ${folderPath}:`, scanError.message);
+          // Return empty array instead of throwing error
+          return [];
+        }
+      } catch (error) {
+        console.error('Dialog error:', error.message);
+        // Return empty array instead of throwing error
+        return [];
+      }
+    });
+
     ipcMain.handle('select-files', async () => {
       try {
         const result = await dialog.showOpenDialog(this.mainWindow, {
@@ -206,11 +231,15 @@ class App {
         const result = await dialog.showOpenDialog(this.mainWindow, {
           properties: ['openDirectory'],
           title: 'Select Drive to Scan',
-          defaultPath: '/Volumes'
+          defaultPath: '/Volumes',
+          buttonLabel: 'Select Drive'
         });
+        
+        console.log('Drive dialog result:', result);
         return result.canceled ? [] : result.filePaths;
       } catch (error) {
-        throw error;
+        console.error('Drive selection error:', error);
+        return [];
       }
     });
 
@@ -233,7 +262,20 @@ class App {
         this.progressFeedback.addCallback(progressListener);
 
         const startTime = Date.now();
-        const results = await this.fileScanner.scanFolder(folderPath);
+        
+        // Check if the path is a file or directory
+        const stats = await fs.stat(folderPath);
+        let results;
+        
+        if (stats.isFile()) {
+          // If it's a single file, process it directly
+          console.log(`📄 Processing single file: ${folderPath}`);
+          results = await this.fileScanner.processSingleFile(folderPath);
+        } else {
+          // If it's a directory, scan it
+          results = await this.fileScanner.scanFolder(folderPath);
+        }
+        
         const duration = Date.now() - startTime;
 
         // Complete progress tracking
@@ -606,6 +648,58 @@ class App {
       }
     }
   }
+}
+
+// Enhanced scanning function with proper file type detection
+const validExtensions = ['.wav', '.mp3', '.aiff', '.flac'];
+
+function scanFolder(dir) {
+  let results = [];
+  
+  try {
+    // Check if directory exists and is accessible before trying to read it
+    if (!fs.existsSync(dir)) {
+      console.log(`Directory does not exist: ${dir}`);
+      return [];
+    }
+    
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      
+      // Skip system directories and hidden files that might cause permission errors
+      if (entry.name.startsWith('.') || 
+          entry.name === 'System Volume Information' ||
+          entry.name === '.DocumentRevisions-V100' ||
+          entry.name === '.Trashes' ||
+          entry.name === '.fseventsd' ||
+          entry.name === '.Spotlight-V100' ||
+          entry.name === 'node_modules' ||
+          entry.name === '.git' ||
+          entry.name === '.DS_Store') {
+        continue;
+      }
+      
+      if (entry.isDirectory()) {
+        try {
+          results = results.concat(scanFolder(fullPath));
+        } catch (error) {
+          // Skip directories we can't access (permission denied, etc.)
+          console.log(`Skipping inaccessible directory: ${fullPath} (${error.message})`);
+          continue;
+        }
+      } else if (validExtensions.includes(path.extname(fullPath).toLowerCase())) {
+        results.push(fullPath);
+      }
+    }
+  } catch (error) {
+    // Handle permission errors for the root directory
+    console.log(`Cannot access directory: ${dir} (${error.message})`);
+    return [];
+  }
+
+  return results;
 }
 
 // Initialize the app when Electron is ready
