@@ -167,7 +167,7 @@ class MusicDatabase {
   // Track operations
   async insertTrack(trackData) {
     const sql = `
-      INSERT INTO tracks (
+      INSERT OR REPLACE INTO tracks (
         file_path, file_name, file_size, duration, bitrate, sample_rate,
         channels, format, title, artist, album, genre, year, tempo,
         key_signature, mood, energy_level, danceability, valence
