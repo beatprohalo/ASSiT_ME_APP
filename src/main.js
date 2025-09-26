@@ -1,17 +1,17 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { Database } = require('./database/database');
-const { FileScanner } = require('./scanner/fileScanner');
+const { Database } = require('../database.js');
+const { FileScanner } = require('../fileScanner.js');
 const { AdvancedSampleManager } = require('./sampleManager/advancedSampleManager');
 const { SampleDatabase } = require('./database/sampleDatabase');
 const ScanHistory = require('./utils/scanHistory');
 const ProgressFeedback = require('./utils/progressFeedback');
-const AutoOrganization = require('./utils/autoOrganization');
-const ConfirmationDialogs = require('./utils/confirmationDialogs');
+const AutoOrganization = require('./autoOrganizer.js');
+const ConfirmationDialogs = require('./confirmationManager.js');
 const AdvancedAudioAnalysis = require('./audio/advancedAudioAnalysis');
 const AIAnalysisEngine = require('./audio/aiAnalysisEngine');
-const { scanFolderRecursively } = require('../scanner');
+const { scanFolderRecursively } = require('../scanner.js');
 
 class App {
   constructor() {
@@ -244,12 +244,27 @@ class App {
     });
 
     // Enhanced file scanning with progress and history
-    ipcMain.handle('scan-folder', async (event, folderPath, options = {}) => {
+    ipcMain.on('scan-folder', async (event, folderPath, options = {}) => {
       try {
+        let pathToScan = folderPath;
+        if (!pathToScan) {
+          const result = await dialog.showOpenDialog(this.mainWindow, {
+            properties: ['openDirectory'],
+            title: 'Select Folder to Scan'
+          });
+
+          if (result.canceled || result.filePaths.length === 0) {
+            this.mainWindow.webContents.send('scan-complete', { fileCount: 0 });
+            return;
+          }
+          pathToScan = result.filePaths[0];
+        }
+
         // Show confirmation dialog
-        const confirmed = await ConfirmationDialogs.confirmScanStart(folderPath, options.estimatedFiles);
+        const confirmed = await ConfirmationDialogs.confirmScanStart(pathToScan, options.estimatedFiles);
         if (confirmed.response === 1) { // Cancel button
-          return { success: false, cancelled: true };
+          this.mainWindow.webContents.send('scan-complete', { success: false, cancelled: true });
+          return;
         }
 
         // Start progress tracking
@@ -264,16 +279,16 @@ class App {
         const startTime = Date.now();
         
         // Check if the path is a file or directory
-        const stats = await fs.stat(folderPath);
+        const stats = await fs.stat(pathToScan);
         let results;
         
         if (stats.isFile()) {
           // If it's a single file, process it directly
-          console.log(`📄 Processing single file: ${folderPath}`);
-          results = await this.fileScanner.processSingleFile(folderPath);
+          console.log(`📄 Processing single file: ${pathToScan}`);
+          results = await this.fileScanner.processSingleFile(pathToScan);
         } else {
           // If it's a directory, scan it
-          results = await this.fileScanner.scanFolder(folderPath);
+          results = await this.fileScanner.scanFolder(pathToScan);
         }
         
         const duration = Date.now() - startTime;
@@ -284,7 +299,7 @@ class App {
 
         // Save to scan history
         const scanData = {
-          location: folderPath,
+          location: pathToScan,
           fileCount: results.tracks.length,
           audioFiles: results.tracks.filter(t => ['wav', 'mp3', 'aiff', 'aif', 'flac', 'm4a', 'ogg', 'wma', 'aac'].includes(t.format)).length,
           midiFiles: results.tracks.filter(t => ['mid', 'midi'].includes(t.format)).length,
@@ -297,10 +312,10 @@ class App {
         // Show completion dialog
         await ConfirmationDialogs.showScanComplete(scanData);
 
-        return { success: true, results, scanData };
+        this.mainWindow.webContents.send('scan-complete', { success: true, results, scanData });
       } catch (error) {
         await ConfirmationDialogs.showScanError(error);
-        return { success: false, error: error.message };
+        this.mainWindow.webContents.send('scan-error', error.message);
       }
     });
 
