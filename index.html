@@ -1050,28 +1050,53 @@
 
     /* ===== Scan controls ===== */
     document.getElementById('btnScan').addEventListener('click', startScan);
-    document.getElementById('btnStop').addEventListener('click', stopScan);
+    // The stop button is not implemented in this fix, as the new scan is non-persistent.
+    // document.getElementById('btnStop').addEventListener('click', stopScan);
 
-    function startScan(){
-      if(scanning) return;
+    function startScan() {
+      if (scanning) return;
       scanning = true;
-      animateProgress(0);
-      statusStrip.textContent = 'Scanning... applying ' + (document.getElementById('deepScan').checked ? 'Deep Scan' : 'Quick Scan');
-      // Simulated scan UI (replace with your real invoke)
-      const total = 150; let found = 0; resultsWrap.querySelectorAll('.result').forEach(r=>r.remove());
-      const tick = setInterval(()=>{
-        if(!scanning){ clearInterval(tick); return; }
-        found += Math.floor(Math.random()*5);
-        const pct = Math.min(100, Math.floor((found/total)*100));
-        animateProgress(pct);
-        updateStatus(Math.min(found,total), total);
-        if (Math.random() > .75) addFakeResult();
-        if (pct>=100){ clearInterval(tick); scanning=false; animateProgress(100); }
-      }, 220);
-    }
-    function stopScan(){ scanning=false; statusStrip.textContent = 'Scan stopped.'; }
 
-    function animateProgress(p){ progressBar.style.width = p + '%'; }
+      // Update UI to show scanning is in progress
+      animateProgress(50); // Indeterminate progress
+      statusStrip.textContent = 'Starting scan... Please select a folder if prompted.';
+      resultsWrap.querySelectorAll('.result').forEach(r => r.remove());
+
+      // Let the main process handle folder selection by sending null
+      ipcRenderer.send('scan-folder', null);
+    }
+
+    // Listener for scan completion
+    ipcRenderer.on('scan-complete', (event, fileCount) => {
+      scanning = false;
+      animateProgress(100);
+      if (fileCount > 0) {
+        statusStrip.textContent = `✅ Scan Complete! Found ${fileCount} supported audio files.`;
+        // Optionally, refresh the library view
+        loadTracks();
+      } else {
+        statusStrip.textContent = '⚠️ Scan finished. No new supported audio files were found.';
+      }
+    });
+
+    // Listener for scan errors
+    ipcRenderer.on('scan-error', (event, errorMessage) => {
+      scanning = false;
+      animateProgress(0); // Reset progress bar
+      statusStrip.textContent = `❌ Error during scan: ${errorMessage}`;
+    });
+
+    function stopScan() {
+      // Since the scan is no longer persistent, a stop function is less critical.
+      // To implement, you would need to send an IPC message to the main process
+      // to have chokidar close its watcher.
+      scanning = false;
+      statusStrip.textContent = 'Scan stopped by user.';
+    }
+
+    function animateProgress(p) {
+      progressBar.style.width = p + '%';
+    }
     function updateStatus(shown,total){
       statusStrip.textContent = `Showing ${Math.min(shown,total)} of ${total} files (${currentFilter} filter)`;
     }
