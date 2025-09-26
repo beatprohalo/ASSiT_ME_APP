@@ -3,242 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ASSiT ME - Music Creator & Organizer</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self';">
+    <title>Music Organizer</title>
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/components.css">
     <link rel="stylesheet" href="styles/dashboard.css">
     <link rel="stylesheet" href="styles/library.css">
     <link rel="stylesheet" href="styles/creative.css">
     <link rel="stylesheet" href="styles/tasks.css">
+    <link rel="stylesheet" href="styles/sampleManager.css">
+    <link rel="stylesheet" href="styles/scanDialog.css">
+    <link rel="stylesheet" href="styles/analysis.css">
 </head>
-<body>
+<body data-theme="dark">
     <div id="app">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h1 class="app-title">ASSiT ME</h1>
-                <p class="app-subtitle">Music Creator & Organizer</p>
-            </div>
-            
-            <nav class="sidebar-nav">
-                <button class="nav-item active" data-view="dashboard">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
-                    </svg>
-                    Dashboard
-                </button>
-                
-                <button class="nav-item" data-view="library">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                    </svg>
-                    Library
-                </button>
-                
-                <button class="nav-item" data-view="creative">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-                    </svg>
-                    Creative
-                </button>
-                
-                <button class="nav-item" data-view="tasks">
-                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 11l3 3l8-8"></path>
-                        <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9s4.03-9 9-9s9 4.03 9 9z"></path>
-                    </svg>
-                    Tasks
-                </button>
-            </nav>
-            
-            <div class="sidebar-footer">
-                <button class="theme-toggle" id="themeToggle">
-                    <svg class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="5"></circle>
-                        <path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-                    </svg>
-                </button>
-            </div>
-        </aside>
-
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Dashboard View -->
-            <div class="view dashboard-view active" id="dashboard">
-                <div class="view-header">
-                    <h2>Dashboard</h2>
-                    <div class="header-actions">
-                        <button class="btn btn-primary" id="scanFolderBtn">
-                            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14,2 14,8 20,8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10,9 9,9 8,9"></polyline>
-                            </svg>
-                            Scan Music Folder
-                        </button>
+            <!-- Header -->
+            <header class="app-header">
+                <div class="header-content">
+                    <div class="app-title">
+                        <svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                        Music Organizer
                     </div>
                 </div>
+            </header>
 
-                <div class="dashboard-grid">
-                    <div class="stats-card">
-                        <h3>Library Stats</h3>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-number" id="totalTracks">0</span>
-                                <span class="stat-label">Total Tracks</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number" id="totalProjects">0</span>
-                                <span class="stat-label">Projects</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number" id="completedTasks">0</span>
-                                <span class="stat-label">Completed Tasks</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-number" id="pendingTasks">0</span>
-                                <span class="stat-label">Pending Tasks</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="recent-card">
-                        <h3>Recent Tracks</h3>
-                        <div class="recent-list" id="recentTracks">
-                            <div class="empty-state">
-                                <p>No tracks found. Scan a music folder to get started.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="tasks-card">
-                        <h3>Upcoming Tasks</h3>
-                        <div class="tasks-list" id="upcomingTasks">
-                            <div class="empty-state">
-                                <p>No upcoming tasks.</p>
-                            </div>
-                        </div>
+            <!-- Choose Scan Location Section -->
+            <section class="scan-location-section">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <h2>Choose Scan Location</h2>
+                </div>
+                
+                <div class="scan-options">
+                    <button class="scan-option" id="selectFolderBtn">
+                        <svg class="option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Select Folder
+                    </button>
+                    
+                    <button class="scan-option" id="selectFileBtn">
+                        <svg class="option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                        </svg>
+                        Select Files
+                    </button>
+                    
+                    <button class="scan-option" id="selectDriveBtn">
+                        <svg class="option-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                        Select Drive
+                    </button>
+                </div>
+                
+                <div class="selected-path" id="selectedPath" style="display: none;">
+                    <div class="path-info">
+                        <svg class="path-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg>
+                        <span class="path-text" id="pathText"></span>
+                        <button class="clear-path" id="clearPathBtn">×</button>
                     </div>
                 </div>
-            </div>
+                
+                <div class="scan-settings">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="deepScan" checked>
+                        <span class="checkmark"></span>
+                        Deep Scan (finds ALL files)
+                    </label>
+                </div>
+            </section>
 
-            <!-- Library View -->
-            <div class="view library-view" id="library">
-                <div class="view-header">
-                    <h2>Music Library</h2>
-                    <div class="header-actions">
-                        <div class="search-box">
-                            <input type="text" placeholder="Search tracks..." id="searchInput">
-                            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8"></circle>
-                                <path d="M21 21l-4.35-4.35"></path>
-                            </svg>
-                        </div>
-                        <div class="filter-controls">
-                            <select id="genreFilter">
-                                <option value="">All Genres</option>
-                            </select>
-                            <select id="moodFilter">
-                                <option value="">All Moods</option>
-                            </select>
-                        </div>
+            <!-- Filter Results Section -->
+            <section class="filter-section">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"></polygon>
+                    </svg>
+                    <h2>Filter Results</h2>
+                </div>
+                
+                <div class="filter-options">
+                    <button class="filter-option" data-filter="all">All Files</button>
+                    <button class="filter-option" data-filter="audio">
+                        <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                        ♫ Audio Files
+                    </button>
+                    <button class="filter-option" data-filter="wav">WAV</button>
+                    <button class="filter-option" data-filter="mp3">MP3</button>
+                    <button class="filter-option" data-filter="aiff">AIFF</button>
+                    <button class="filter-option" data-filter="flac">FLAC</button>
+                    <button class="filter-option" data-filter="m4a">M4A</button>
+                    <button class="filter-option" data-filter="midi">
+                        <svg class="filter-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M9 18V5l12-2v13"></path>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <circle cx="18" cy="16" r="3"></circle>
+                        </svg>
+                        🎹 MIDI Files
+                    </button>
+                    <button class="filter-option active" data-filter="logic">Logic Pro</button>
+                    <button class="filter-option" data-filter="protools">Pro Tools</button>
+                    <button class="filter-option" data-filter="studioone">Studio One</button>
+                    <button class="filter-option" data-filter="cubase">Cubase</button>
+                    <button class="filter-option" data-filter="flstudio">FL Studio</button>
+                    <button class="filter-option" data-filter="ableton">Ableton Live</button>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <section class="action-section">
+                <button class="btn btn-primary btn-large" id="scanBtn">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                    Scan for Music
+                </button>
+                
+                <button class="btn btn-secondary btn-large" id="stopBtn" disabled>
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="6" y="6" width="12" height="12"></rect>
+                    </svg>
+                    Stop Scan
+                </button>
+                
+                <button class="btn btn-outline btn-large" id="clearBtn" style="display: none;">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                    Clear Results
+                </button>
+            </section>
+
+            <!-- Progress Section -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-bars">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="mainProgress"></div>
+                    </div>
+                    <div class="progress-bar secondary">
+                        <div class="progress-fill" id="secondaryProgress"></div>
                     </div>
                 </div>
-
-                <div class="library-content">
-                    <div class="tracks-grid" id="tracksGrid">
-                        <div class="empty-state">
-                            <p>No tracks found. Scan a music folder to get started.</p>
-                        </div>
-                    </div>
+                
+                <div class="progress-info">
+                    <span id="progressText">Showing 12 of 150 files (logic filter)</span>
+                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M12 16v-4"></path>
+                        <path d="M12 8h.01"></path>
+                    </svg>
                 </div>
-            </div>
+            </section>
 
-            <!-- Creative View -->
-            <div class="view creative-view" id="creative">
-                <div class="view-header">
-                    <h2>Creative Panel</h2>
+            <!-- Scan Results Section -->
+            <section class="results-section">
+                <div class="section-header">
+                    <svg class="section-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                    </svg>
+                    <h2>Scan Results</h2>
                 </div>
-
-                <div class="creative-content">
-                    <div class="creative-panel">
-                        <div class="idea-generator">
-                            <h3>Generate Music Idea</h3>
-                            <div class="input-group">
-                                <textarea id="ideaPrompt" placeholder="Describe your musical idea... (e.g., 'Dark R&B loop at 100 BPM with heavy bass')"></textarea>
-                                <button class="btn btn-primary" id="generateIdeaBtn">
-                                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="3"></circle>
-                                        <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"></path>
-                                    </svg>
-                                    Generate Idea
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="voice-input">
-                            <h3>Voice Commands</h3>
-                            <button class="btn btn-secondary voice-btn" id="voiceInputBtn">
-                                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                    <line x1="12" y1="19" x2="12" y2="23"></line>
-                                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                
+                <!-- Clear All Scans button at the top of results -->
+                <button class="btn btn-outline btn-sm clear-all-btn" id="clearAllBtn" style="display: none;">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                    </svg>
+                    Clear All Scans
+                </button>
+                
+                <div class="results-container" id="resultsContainer">
+                    <!-- Audio Files Category -->
+                    <div class="category-section" id="audioCategory" style="display: none;">
+                        <div class="category-header" onclick="toggleCategory('audioCategory')">
+                            <div class="category-info">
+                                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
                                 </svg>
-                                Start Voice Input
-                            </button>
+                                <h3>Audio Files</h3>
+                                <span class="category-count" id="audioCount">0</span>
+                            </div>
+                            <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
                         </div>
-
-                        <div class="generated-ideas" id="generatedIdeas">
-                            <h3>Recent Ideas</h3>
-                            <div class="ideas-list">
-                                <div class="empty-state">
-                                    <p>No ideas generated yet.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tasks View -->
-            <div class="view tasks-view" id="tasks">
-                <div class="view-header">
-                    <h2>Task Management</h2>
-                </div>
-
-                <div class="tasks-content">
-                    <div class="tasks-overview">
-                        <div class="task-stats">
-                            <div class="stat-card">
-                                <span class="stat-number" id="totalTasks">0</span>
-                                <span class="stat-label">Total Tasks</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number" id="completedTasksCount">0</span>
-                                <span class="stat-label">Completed</span>
-                            </div>
-                            <div class="stat-card">
-                                <span class="stat-number" id="overdueTasks">0</span>
-                                <span class="stat-label">Overdue</span>
-                            </div>
+                        <div class="category-content" id="audioContent">
+                            <div class="file-list" id="audioFiles"></div>
                         </div>
                     </div>
 
-                    <div class="tasks-list" id="allTasks">
-                        <div class="empty-state">
-                            <p>No tasks found.</p>
+                    <!-- MIDI Files Category -->
+                    <div class="category-section" id="midiCategory" style="display: none;">
+                        <div class="category-header" onclick="toggleCategory('midiCategory')">
+                            <div class="category-info">
+                                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                                <h3>MIDI Files</h3>
+                                <span class="category-count" id="midiCount">0</span>
+                            </div>
+                            <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="category-content" id="midiContent">
+                            <div class="file-list" id="midiFiles"></div>
                         </div>
                     </div>
+
+                    <!-- Logic Pro Sessions Category -->
+                    <div class="category-section" id="logicCategory" style="display: none;">
+                        <div class="category-header" onclick="toggleCategory('logicCategory')">
+                            <div class="category-info">
+                                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <path d="M9 9h6v6H9z"></path>
+                                </svg>
+                                <h3>Logic Pro Sessions</h3>
+                                <span class="category-count" id="logicCount">0</span>
+                            </div>
+                            <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="category-content" id="logicContent">
+                            <div class="file-list" id="logicFiles"></div>
+                        </div>
+                    </div>
+
+                    <!-- Other DAW Sessions Category -->
+                    <div class="category-section" id="dawCategory" style="display: none;">
+                        <div class="category-header" onclick="toggleCategory('dawCategory')">
+                            <div class="category-info">
+                                <svg class="category-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <path d="M9 9h6v6H9z"></path>
+                                </svg>
+                                <h3>Other DAW Sessions</h3>
+                                <span class="category-count" id="dawCount">0</span>
+                            </div>
+                            <svg class="expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6,9 12,15 18,9"></polyline>
+                            </svg>
+                        </div>
+                        <div class="category-content" id="dawContent">
+                            <div class="file-list" id="dawFiles"></div>
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div class="empty-state" id="emptyState">
+                        <p>No results yet. Click "Scan for Music" to start scanning your files.</p>
+                    </div>
                 </div>
-            </div>
+            </section>
         </main>
     </div>
 
@@ -248,5 +294,31 @@
     <script src="js/library.js"></script>
     <script src="js/creative.js"></script>
     <script src="js/tasks.js"></script>
+    <script src="js/sampleManager.js"></script>
+    <script src="js/scanDialog.js"></script>
+    
+    <!-- Enhanced features scripts -->
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      document.getElementById('scanBtn').addEventListener('click', async () => {
+        const files = await ipcRenderer.invoke('select-folder');
+        const list = document.getElementById('list');
+        list.innerHTML = '';
+
+        if (files.length === 0) {
+          alert('No valid audio files found (.wav, .mp3, .aiff, .flac).');
+          return;
+        }
+
+        files.forEach(file => {
+          const li = document.createElement('li');
+          li.textContent = file;
+          list.appendChild(li);
+        });
+
+        alert(`Found ${files.length} audio file(s).`);
+      });
+    </script>
 </body>
 </html>

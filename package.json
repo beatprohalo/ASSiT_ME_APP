@@ -3,9 +3,9 @@
   "productName": "assit_me_app",
   "version": "1.0.0",
   "description": "My Electron application description",
-  "main": "src/minimal-working.js",
+  "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "electron-forge start",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "package": "electron-forge package",
     "make": "electron-forge make",
@@ -21,9 +21,9 @@
     "@tonejs/midi": "^2.0.28",
     "better-sqlite3": "^12.4.1",
     "chokidar": "^4.0.3",
-    "electron": "^38.1.2",
     "electron-squirrel-startup": "^1.0.1",
     "elevenlabs": "^1.59.0",
+    "jsmediatags": "^3.9.7",
     "midi-parser-js": "^4.0.4",
     "music-metadata": "^11.9.0",
     "openai": "^5.23.0",
@@ -43,6 +43,7 @@
     "@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
     "@electron-forge/plugin-fuses": "^7.9.0",
     "@electron/fuses": "^1.8.0",
+    "electron": "^38.1.2",
     "electron-rebuild": "^3.2.9"
   }
 }
