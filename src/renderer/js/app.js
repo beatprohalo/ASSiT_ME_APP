@@ -45,7 +45,8 @@ class MusicOrganizerApp {
     if (selectFolderBtn) {
       selectFolderBtn.addEventListener('click', () => {
         console.log('Select folder button clicked');
-        this.selectFolder();
+        // This button is now handled by the main scan button
+        // No duplicate event listener needed
       });
     }
     
@@ -80,7 +81,7 @@ class MusicOrganizerApp {
 
     // Scan button
     document.getElementById('scanBtn').addEventListener('click', () => {
-      this.startScan();
+      this.selectFolder();
     });
 
     // Stop button
@@ -435,7 +436,7 @@ class MusicOrganizerApp {
 
   async loadScanHistory() {
     try {
-      const history = await window.electronAPI.getScanHistory();
+      const history = await window.api.getScanHistory();
       this.scanHistory = history;
       console.log('Loaded scan history:', history);
     } catch (error) {
@@ -444,34 +445,67 @@ class MusicOrganizerApp {
   }
 
   async selectFolder() {
+    // Prevent multiple simultaneous calls
+    if (this.isSelectingFolder) {
+      console.log('Folder selection already in progress, skipping...');
+      return;
+    }
+    
+    this.isSelectingFolder = true;
+    
     try {
       console.log('Selecting folder...');
-      
-      // Show the advanced scan dialog instead of direct folder selection
-      if (window.ScanDialog) {
-        const scanDialog = new window.ScanDialog();
-        scanDialog.show();
-        return;
-      }
       
       if (!window.electronAPI) {
         this.showError('Electron API not available. Please restart the app.');
         return;
       }
       
-      const result = await window.electronAPI.selectFolder();
+      const result = await window.electronAPI.selectFolderAndScan();
       console.log('Folder selection result:', result);
       
       if (result && result.length > 0) {
-        this.selectedPath = result[0];
+        // Get the parent directory of the first file as the selected path
+        this.selectedPath = result[0].substring(0, result[0].lastIndexOf('/'));
         this.showSelectedPath();
         console.log('Selected folder:', this.selectedPath);
+        
+        // Process the scanned files directly
+        this.scanResults = result;
+        this.displayResults();
+        
+        // Show success message
+        this.showSuccess(`✅ Found ${result.length} audio files!`);
+        
+        // Show clear buttons if we have results
+        if (this.scanResults.length > 0) {
+          const clearBtn = document.getElementById('clearBtn');
+          const clearAllBtn = document.getElementById('clearAllBtn');
+          if (clearBtn) clearBtn.style.display = 'inline-flex';
+          if (clearAllBtn) clearAllBtn.style.display = 'flex';
+          
+          // Show filter section after scan is complete
+          const filterSection = document.querySelector('.filter-section');
+          if (filterSection) {
+            filterSection.style.display = 'block';
+          }
+          
+          // Reset filter to "all" and activate it
+          this.currentFilter = 'all';
+          document.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
+          const allFilter = document.querySelector('[data-filter="all"]');
+          if (allFilter) allFilter.classList.add('active');
+        }
       } else {
         console.log('No folder selected');
+        this.showError('❌ No audio files found in the selected folder.');
       }
     } catch (error) {
       console.error('Error selecting folder:', error);
       this.showError('Failed to select folder: ' + error.message);
+    } finally {
+      // Reset the flag to allow future calls
+      this.isSelectingFolder = false;
     }
   }
 
@@ -501,6 +535,14 @@ class MusicOrganizerApp {
   }
 
   async selectDrive() {
+    // Prevent multiple simultaneous calls
+    if (this.isSelectingDrive) {
+      console.log('Drive selection already in progress, skipping...');
+      return;
+    }
+    
+    this.isSelectingDrive = true;
+    
     try {
       console.log('Selecting drive...');
       
@@ -522,6 +564,9 @@ class MusicOrganizerApp {
     } catch (error) {
       console.error('Error selecting drive:', error);
       this.showError('Failed to select drive: ' + error.message);
+    } finally {
+      // Reset the flag to allow future calls
+      this.isSelectingDrive = false;
     }
   }
 
@@ -573,7 +618,7 @@ class MusicOrganizerApp {
       // Set up progress listener
       this.setupProgressListener();
       
-      // Call the enhanced scan function
+      // Use the contextBridge API to scan folder
       const result = await window.electronAPI.scanFolder(this.selectedPath, scanOptions);
       
       if (result.success) {
@@ -866,21 +911,30 @@ class MusicOrganizerApp {
     };
     
     results.forEach(result => {
-      const format = result.format ? result.format.toLowerCase() : '';
-      const fileName = result.file_name || result.fileName || '';
-      const filePath = result.file_path || result.filePath || '';
-      const ext = this.getFileExtension(filePath);
+      // Handle both enhanced scanning results (file paths) and regular results (objects)
+      let filePath, fileName, ext;
       
-      // Categorize based on file type
-      if (['mid', 'midi', 'kar', 'rmi'].includes(format) || ['.mid', '.midi', '.kar', '.rmi'].includes(ext)) {
+      if (typeof result === 'string') {
+        // Enhanced scanning returns file paths as strings
+        filePath = result;
+        fileName = result.split('/').pop(); // Get filename from path
+        ext = this.getFileExtension(filePath);
+      } else {
+        // Regular results are objects with properties
+        const format = result.format ? result.format.toLowerCase() : '';
+        fileName = result.file_name || result.fileName || '';
+        filePath = result.file_path || result.filePath || '';
+        ext = this.getFileExtension(filePath);
+      }
+      
+      // Categorize based on file extension
+      if (['.mid', '.midi', '.kar', '.rmi'].includes(ext)) {
         categories.midi.push(result);
-      } else if (format === 'logic' || format === 'logicx' || ext === '.logic' || ext === '.logicx') {
+      } else if (['.logic', '.logicx'].includes(ext)) {
         categories.logic.push(result);
-      } else if (['als', 'alp', 'cpr', 'ptx', 'ptf', 'song', 'flp'].includes(format) || 
-                 ['.als', '.alp', '.cpr', '.ptx', '.ptf', '.song', '.flp'].includes(ext)) {
+      } else if (['.als', '.alp', '.cpr', '.ptx', '.ptf', '.song', '.flp'].includes(ext)) {
         categories.daw.push(result);
-      } else if (['wav', 'mp3', 'aiff', 'aif', 'flac', 'm4a', 'm4b', 'm4p', 'aac', 'ogg', 'wma', 'opus', 'wv', 'ape', 'tta', 'tak', 'ofr', 'ofs', 'off', 'rka', '3ga', 'aa', 'aax', 'act', 'alac', 'amr', 'au', 'awb', 'dct', 'dss', 'dvf', 'gsm', 'iklax', 'ivs', 'ivx', 'mmf', 'mpc', 'msv', 'nmf', 'oga', 'mogg', 'ra', 'rm', 'raw', 'rf64', 'sln', 'voc', 'vox', 'webm', '8svx', 'cda'].includes(format) ||
-                 ['.wav', '.mp3', '.aiff', '.aif', '.flac', '.m4a', '.m4b', '.m4p', '.aac', '.ogg', '.wma', '.opus', '.wv', '.ape', '.tta', '.tak', '.ofr', '.ofs', '.off', '.rka', '.3ga', '.aa', '.aax', '.act', '.alac', '.amr', '.au', '.awb', '.dct', '.dss', '.dvf', '.gsm', '.iklax', '.ivs', '.ivx', '.mmf', '.mpc', '.msv', '.nmf', '.oga', '.mogg', '.ra', '.rm', '.raw', '.rf64', '.sln', '.voc', '.vox', '.webm', '.8svx', '.cda'].includes(ext)) {
+      } else if (['.wav', '.mp3', '.aiff', '.aif', '.flac', '.m4a', '.m4b', '.m4p', '.aac', '.ogg', '.wma', '.opus', '.wv', '.ape', '.tta', '.tak', '.ofr', '.ofs', '.off', '.rka', '.3ga', '.aa', '.aax', '.act', '.alac', '.amr', '.au', '.awb', '.dct', '.dss', '.dvf', '.gsm', '.iklax', '.ivs', '.ivx', '.mmf', '.mpc', '.msv', '.nmf', '.oga', '.mogg', '.ra', '.rm', '.raw', '.rf64', '.sln', '.voc', '.vox', '.webm', '.8svx', '.cda'].includes(ext)) {
         categories.audio.push(result);
       }
     });
@@ -970,13 +1024,24 @@ class MusicOrganizerApp {
   }
 
   createFileItem(file) {
-    const fileName = file.file_name || file.fileName || 'Unknown';
-    const format = file.format || 'Unknown';
-    const fileSize = this.formatFileSize(file.file_size || file.fileSize);
+    // Handle both enhanced scanning results (file paths) and regular results (objects)
+    let fileName, format, fileSize;
+    
+    if (typeof file === 'string') {
+      // Enhanced scanning returns file paths as strings
+      fileName = file.split('/').pop(); // Get filename from path
+      format = this.getFileExtension(file).substring(1); // Remove the dot
+      fileSize = 'Unknown'; // File size not available for enhanced scanning
+    } else {
+      // Regular results are objects with properties
+      fileName = file.file_name || file.fileName || 'Unknown';
+      format = file.format || 'Unknown';
+      fileSize = this.formatFileSize(file.file_size || file.fileSize);
+    }
     
     // Get file type display name
     let typeDisplay = format.toUpperCase();
-    if (file.type) {
+    if (typeof file === 'object' && file.type) {
       typeDisplay = file.type;
     } else if (format === 'logic' || format === 'logicx') {
       typeDisplay = 'Logic Pro Project';
@@ -1321,6 +1386,12 @@ class MusicOrganizerApp {
     console.error(message);
     // Simple alert for now
     alert('Error: ' + message);
+  }
+
+  showSuccess(message) {
+    console.log(message);
+    // Simple alert for now
+    alert(message);
   }
 
   showNotification(message) {

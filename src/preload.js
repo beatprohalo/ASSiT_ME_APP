@@ -2,9 +2,48 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
+contextBridge.exposeInMainWorld('api', {
+  getScanHistory: () => ipcRenderer.invoke('get-scan-history'),
+  sampleManager: {
+    getStatus: () => ipcRenderer.invoke('sample-manager-status'),
+    search: (query) => ipcRenderer.invoke('sample-manager-search', query),
+    getRecommendations: (context) => ipcRenderer.invoke('sample-manager-recommendations', context),
+    analyze: (samplePath) => ipcRenderer.invoke('sample-manager-analyze', samplePath),
+    batchProcess: (samplePaths, operations) => ipcRenderer.invoke('sample-manager-batch-process', samplePaths, operations),
+    getCollections: () => ipcRenderer.invoke('sample-manager-collections'),
+    createCollection: (name, description, tags, isSmart, smartCriteria) => ipcRenderer.invoke('sample-manager-create-collection', name, description, tags, isSmart, smartCriteria),
+    getAnalytics: () => ipcRenderer.invoke('sample-manager-analytics'),
+    
+    // Enhanced AI Analysis
+    analyzeWithAI: (samplePath, options) => ipcRenderer.invoke('sample-manager-analyze-ai', samplePath, options),
+    generateSmartTags: (samplePath) => ipcRenderer.invoke('sample-manager-smart-tags', samplePath),
+    findSimilar: (samplePath, threshold) => ipcRenderer.invoke('sample-manager-find-similar', samplePath, threshold),
+    
+    // Audio Processing
+    separateStems: (samplePath, options) => ipcRenderer.invoke('sample-manager-separate-stems', samplePath, options),
+    detectTransients: (samplePath, options) => ipcRenderer.invoke('sample-manager-detect-transients', samplePath, options),
+    chopSample: (samplePath, options) => ipcRenderer.invoke('sample-manager-chop-sample', samplePath, options),
+    applyEffects: (samplePath, effects, options) => ipcRenderer.invoke('sample-manager-apply-effects', samplePath, effects, options),
+    pitchShift: (samplePath, semitones, options) => ipcRenderer.invoke('sample-manager-pitch-shift', samplePath, semitones, options),
+    timeStretch: (samplePath, factor, options) => ipcRenderer.invoke('sample-manager-time-stretch', samplePath, factor, options),
+    
+    // Workflow Integration
+    sendToDAW: (daw, sample, options) => ipcRenderer.invoke('sample-manager-send-to-daw', daw, sample, options),
+    syncWithCloud: (direction) => ipcRenderer.invoke('sample-manager-sync-cloud', direction),
+    shareSamplePack: (samplePack, users) => ipcRenderer.invoke('sample-manager-share-pack', samplePack, users),
+    createVersion: (sample) => ipcRenderer.invoke('sample-manager-create-version', sample),
+    getIntegrationStatus: () => ipcRenderer.invoke('sample-manager-integration-status'),
+    
+    // Advanced Search
+    naturalLanguageSearch: (query) => ipcRenderer.invoke('sample-manager-natural-search', query),
+    getSmartRecommendations: (context, preferences) => ipcRenderer.invoke('sample-manager-smart-recommendations', context, preferences)
+  }
+});
+
 contextBridge.exposeInMainWorld('electronAPI', {
   // File/Folder/Drive selection
   selectFolder: () => ipcRenderer.invoke('select-folder'),
+  selectFolderAndScan: () => ipcRenderer.invoke('select-folder-and-scan'),
   selectFiles: () => ipcRenderer.invoke('select-files'),
   selectDrive: () => ipcRenderer.invoke('select-drive'),
   
